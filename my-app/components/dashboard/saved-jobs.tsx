@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ApplicationForm } from "@/components/dashboard/application-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -220,11 +221,13 @@ export function SavedJobsContent() {
                   {searchQuery ? "No jobs match your search" : "Start saving jobs to view them here"}
                 </p>
                 {!searchQuery && (
-                  <Button
-                    className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed]"
-                  >
-                    Browse Jobs
-                  </Button>
+                  <Link href="/jobs">
+                    <Button
+                      className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed]"
+                    >
+                      Browse Jobs
+                    </Button>
+                  </Link>
                 )}
               </CardContent>
             </Card>

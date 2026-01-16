@@ -1,11 +1,8 @@
+"use client";
+
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { LoginContent } from "@/components/auth/login";
-
-export const metadata = {
-  title: "Login - GROEI",
-  description: "Sign in to your GROEI account",
-};
 
 export default function LoginPage() {
   return (

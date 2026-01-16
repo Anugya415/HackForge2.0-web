@@ -36,15 +36,17 @@ export function LoginContent() {
     try {
       const response = await authAPI.login(email, password);
       
+      if (!response || !response.user || !response.token) {
+        throw new Error("Invalid response from server");
+      }
+      
       if (typeof window !== "undefined") {
-        // Set localStorage
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("userRole", response.user.role);
         if (response.token) {
           localStorage.setItem("authToken", response.token);
         }
         
-        // Set cookies for middleware protection
         if (response.token) {
           setAuthCookies(response.token, response.user.role, true);
         }
@@ -63,10 +65,12 @@ export function LoginContent() {
           
           const urlParams = new URLSearchParams(window.location.search);
           const redirect = urlParams.get("redirect");
+          setIsLoading(false);
           router.push(redirect || "/admin");
         } else {
           const urlParams = new URLSearchParams(window.location.search);
           const redirect = urlParams.get("redirect");
+          setIsLoading(false);
           router.push(redirect || "/dashboard");
         }
       }

@@ -8,3 +8,4 @@ export default function SuperAdminLayout({
   return <ProtectedRoute requireAdmin>{children}</ProtectedRoute>;
 }
 
+

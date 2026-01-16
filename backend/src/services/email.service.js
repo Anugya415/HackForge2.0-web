@@ -1,0 +1,216 @@
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Create reusable transporter
+const createTransporter = () => {
+  // For development, you can use Gmail with app password
+  // For production, use proper SMTP server
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER || process.env.EMAIL_USER,
+      pass: process.env.SMTP_PASS || process.env.EMAIL_PASSWORD,
+    },
+  });
+};
+
+// Verify transporter configuration
+export const verifyEmailConfig = async () => {
+  try {
+    const transporter = createTransporter();
+    await transporter.verify();
+    console.log('✅ Email server is ready to send messages');
+    return true;
+  } catch (err) {
+    const error = err || new Error('Unknown email config error');
+    console.warn('⚠️  Email configuration error:', error.message || error);
+    console.warn('⚠️  Email functionality may not work. Please configure SMTP settings in .env');
+    return false;
+  }
+};
+
+// Email templates
+const emailTemplates = {
+  verification: (name, verificationUrl) => ({
+    subject: 'Verify Your Email - GROEI',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .header h1 { color: white; margin: 0; }
+          .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+          .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Welcome to GROEI!</h1>
+          </div>
+          <div class="content">
+            <h2>Hello ${name}!</h2>
+            <p>Thank you for signing up for GROEI. Please verify your email address to complete your registration and start exploring job opportunities.</p>
+            <p style="text-align: center;">
+              <a href="${verificationUrl}" class="button">Verify Email Address</a>
+            </p>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #6366f1;">${verificationUrl}</p>
+            <p><strong>This link will expire in 24 hours.</strong></p>
+            <p>If you didn't create an account with GROEI, please ignore this email.</p>
+          </div>
+          <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} GROEI. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      Welcome to GROEI!
+      
+      Hello ${name}!
+      
+      Thank you for signing up for GROEI. Please verify your email address to complete your registration.
+      
+      Click this link to verify your email: ${verificationUrl}
+      
+      This link will expire in 24 hours.
+      
+      If you didn't create an account with GROEI, please ignore this email.
+      
+      © ${new Date().getFullYear()} GROEI. All rights reserved.
+    `,
+  }),
+
+  passwordReset: (name, resetUrl) => ({
+    subject: 'Reset Your Password - GROEI',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .header h1 { color: white; margin: 0; }
+          .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+          .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
+          .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Password Reset Request</h1>
+          </div>
+          <div class="content">
+            <h2>Hello ${name}!</h2>
+            <p>We received a request to reset your password for your GROEI account.</p>
+            <p style="text-align: center;">
+              <a href="${resetUrl}" class="button">Reset Password</a>
+            </p>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #6366f1;">${resetUrl}</p>
+            <div class="warning">
+              <strong>Important:</strong> This link will expire in 1 hour. If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+            </div>
+            <p>For security reasons, if you didn't request this password reset, please contact support immediately.</p>
+          </div>
+          <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} GROEI. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      Password Reset Request
+      
+      Hello ${name}!
+      
+      We received a request to reset your password for your GROEI account.
+      
+      Click this link to reset your password: ${resetUrl}
+      
+      This link will expire in 1 hour.
+      
+      If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+      
+      © ${new Date().getFullYear()} GROEI. All rights reserved.
+    `,
+  }),
+};
+
+// Send email
+export const sendEmail = async (to, templateName, templateData) => {
+  try {
+    const transporter = createTransporter();
+    
+    // Check if email is configured
+    if (!process.env.SMTP_USER && !process.env.EMAIL_USER) {
+      console.warn('⚠️  Email not configured. Skipping email send.');
+      return { success: false, error: 'Email not configured' };
+    }
+
+    const template = emailTemplates[templateName];
+    if (!template) {
+      throw new Error(`Email template "${templateName}" not found`);
+    }
+
+    const { subject, html, text } = template(
+      templateData.name || 'User',
+      templateData.url
+    );
+
+    const mailOptions = {
+      from: `"GROEI" <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+      text,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    const error = err || new Error('Unknown email error');
+    console.error('❌ Email send error:', error.message || error);
+    return { success: false, error: error.message || 'Failed to send email' };
+  }
+};
+
+// Send verification email
+export const sendVerificationEmail = async (email, name, token) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const verificationUrl = `${frontendUrl}/verify-email?token=${token}`;
+  
+  return await sendEmail(email, 'verification', {
+    name,
+    url: verificationUrl,
+  });
+};
+
+// Send password reset email
+export const sendPasswordResetEmail = async (email, name, token) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+  
+  return await sendEmail(email, 'passwordReset', {
+    name,
+    url: resetUrl,
+  });
+};
+

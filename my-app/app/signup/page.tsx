@@ -1,11 +1,8 @@
+"use client";
+
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { SignupContent } from "@/components/auth/signup";
-
-export const metadata = {
-  title: "Sign Up - GROEI",
-  description: "Create your GROEI account and start your career journey",
-};
 
 export default function SignupPage() {
   return (

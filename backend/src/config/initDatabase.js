@@ -61,6 +61,11 @@ CREATE TABLE IF NOT EXISTS users (
   location VARCHAR(255),
   title VARCHAR(255),
   company_id INT,
+  email_verified BOOLEAN DEFAULT FALSE,
+  verification_token VARCHAR(255),
+  verification_token_expires DATETIME,
+  password_reset_token VARCHAR(255),
+  password_reset_expires DATETIME,
   status ENUM('active', 'inactive') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -68,7 +73,10 @@ CREATE TABLE IF NOT EXISTS users (
   INDEX idx_email (email),
   INDEX idx_role (role),
   INDEX idx_company (company_id),
-  INDEX idx_status (status)
+  INDEX idx_status (status),
+  INDEX idx_verification_token (verification_token),
+  INDEX idx_password_reset_token (password_reset_token),
+  INDEX idx_email_verified (email_verified)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS jobs (
@@ -236,6 +244,11 @@ CREATE TABLE IF NOT EXISTS analytics (
       { name: 'linkedin', type: 'VARCHAR(255)' },
       { name: 'github', type: 'VARCHAR(255)' },
       { name: 'portfolio', type: 'VARCHAR(255)' },
+      { name: 'email_verified', type: 'BOOLEAN DEFAULT FALSE' },
+      { name: 'verification_token', type: 'VARCHAR(255)' },
+      { name: 'verification_token_expires', type: 'DATETIME' },
+      { name: 'password_reset_token', type: 'VARCHAR(255)' },
+      { name: 'password_reset_expires', type: 'DATETIME' },
     ];
     
     for (const column of columnsToAdd) {
@@ -259,26 +272,6 @@ CREATE TABLE IF NOT EXISTS analytics (
       }
     }
 
-    for (const column of resumeColumnsToAdd) {
-      try {
-        const [columns] = await connection.query(
-          `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
-           WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'resumes' AND COLUMN_NAME = ?`,
-          [dbName, column.name]
-        );
-        
-        if (columns.length === 0) {
-          await connection.query(
-            `ALTER TABLE resumes ADD COLUMN ${column.name} ${column.type}`
-          );
-          console.log(`Added column '${column.name}' to resumes table`);
-        }
-      } catch (error) {
-        if (error.code !== 'ER_DUP_FIELDNAME') {
-          console.error(`Error adding column '${column.name}':`, error.message);
-        }
-      }
-    }
     
     console.log('All tables created successfully');
     

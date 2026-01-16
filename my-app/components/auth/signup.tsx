@@ -50,6 +50,7 @@ export function SignupContent() {
     
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
+      setIsLoading(false);
       return;
     }
     
@@ -70,15 +71,17 @@ export function SignupContent() {
       
       const response = await authAPI.signup(signupData);
       
+      if (!response || !response.user || !response.token) {
+        throw new Error("Invalid response from server");
+      }
+      
       if (typeof window !== "undefined") {
-        // Set localStorage
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("userRole", response.user.role);
         if (response.token) {
           localStorage.setItem("authToken", response.token);
         }
         
-        // Set cookies for middleware protection
         if (response.token) {
           setAuthCookies(response.token, response.user.role, true);
         }
@@ -95,6 +98,7 @@ export function SignupContent() {
             localStorage.setItem("adminEmail", response.user.email);
           }
         }
+        setIsLoading(false);
         router.push("/profile/complete");
       }
     } catch (err: any) {

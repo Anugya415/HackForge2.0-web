@@ -67,6 +67,12 @@ app.use((err, req, res, next) => {
 
 const startServer = async () => {
   try {
+    // Verify email configuration (if configured)
+    if (process.env.SMTP_USER || process.env.EMAIL_USER) {
+      const { verifyEmailConfig } = await import('./services/email.service.js');
+      await verifyEmailConfig();
+    }
+    
     console.log('Checking database connection...');
     const isConnected = await testConnection();
     if (!isConnected) {
@@ -122,7 +128,8 @@ const startServer = async () => {
         process.exit(1);
       }
     });
-  } catch (error) {
+  } catch (err) {
+    const error = err || new Error('Unknown error');
     console.error('Failed to start server:', error);
     process.exit(1);
   }

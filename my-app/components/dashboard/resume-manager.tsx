@@ -34,12 +34,19 @@ const mockResume = {
 
 export function ResumeContent() {
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resumes, setResumes] = useState<any[]>([]);
 
   const handleUpload = () => {
     setIsUploading(true);
+    setError(null);
     setTimeout(() => {
       setIsUploading(false);
     }, 2000);
+  };
+
+  const handleDelete = (id: string) => {
+    setResumes(resumes.filter((resume) => resume.id !== id));
   };
 
   return (

@@ -1,10 +1,7 @@
+"use client";
+
 import { DashboardContent } from "@/components/dashboard/dashboard";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
-
-export const metadata = {
-  title: "Dashboard - GROEI",
-  description: "Your personal dashboard",
-};
 
 export default function DashboardPage() {
   return (

@@ -25,58 +25,70 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
-        let errorMessage = `Request failed with status ${response.status}`;
+        const errorText = await response.text().catch(() => 'Unknown error');
         let errorData: any = null;
         
         try {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            errorData = await response.json();
-          } else {
-            const text = await response.text();
-            if (text) {
-              try {
-                errorData = JSON.parse(text);
-              } catch {
-                errorMessage = text || errorMessage;
-              }
-            }
-          }
-        } catch (e) {
-          // Silently handle parsing errors
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || `Request failed with status ${response.status}` };
         }
         
-        if (errorData) {
-          if (errorData.errors && Array.isArray(errorData.errors)) {
-            errorMessage = errorData.errors.map((e: any) => e.msg || e.message || e.param).join(', ') || errorMessage;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
-          } else if (errorData.message) {
-            errorMessage = errorData.message;
-          }
-        }
+        const errorMessage = errorData.errors && Array.isArray(errorData.errors)
+          ? errorData.errors.map((e: any) => e.msg || e.message || e.param).join(', ')
+          : errorData.error || errorData.message || `Request failed with status ${response.status}`;
         
         const error = new Error(errorMessage);
         (error as any).status = response.status;
         (error as any).data = errorData;
         (error as any).isApiError = true;
-        (error as any).name = 'APIError';
         throw error;
       }
 
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+
+      const contentType = response.headers.get('content-type') || '';
+      let responseData: any;
+      
+      try {
+        const responseText = await response.text();
+        
+        if (!responseText || responseText.trim() === '') {
+          responseData = {};
+        } else if (contentType.includes('application/json')) {
+          responseData = JSON.parse(responseText);
+        } else {
+          try {
+            responseData = JSON.parse(responseText);
+          } catch {
+            responseData = responseText;
+          }
+        }
+      } catch (parseError: any) {
+        console.error('Error parsing response:', parseError, 'Content-Type:', contentType);
+        throw new Error(`Failed to parse server response: ${parseError.message}`);
       }
-      return await response.text();
+      
+      return responseData as T;
     } catch (error: any) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout. Please check if the backend server is running on http://localhost:8080');
+      }
+      
       if (error.isApiError) {
         throw error;
       }
@@ -108,7 +120,7 @@ class ApiClient {
   async post<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 
@@ -177,6 +189,22 @@ export const authAPI = {
       const { clearAuthCookies } = require('./cookies');
       clearAuthCookies();
     }
+  },
+
+  verifyEmail: async (token: string) => {
+    return api.get<{ message: string }>(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+  },
+
+  resendVerification: async (email: string) => {
+    return api.post<{ message: string }>('/auth/resend-verification', { email });
+  },
+
+  forgotPassword: async (email: string) => {
+    return api.post<{ message: string }>('/auth/forgot-password', { email });
+  },
+
+  resetPassword: async (token: string, password: string) => {
+    return api.post<{ message: string }>('/auth/reset-password', { token, password });
   },
 };
 
