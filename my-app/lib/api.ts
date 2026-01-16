@@ -164,6 +164,7 @@ export const authAPI = {
   logout: () => {
     api.setToken(null);
     if (typeof window !== 'undefined') {
+      // Clear localStorage
       localStorage.removeItem('authToken');
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('isAdminLoggedIn');
@@ -171,6 +172,10 @@ export const authAPI = {
       localStorage.removeItem('adminCompany');
       localStorage.removeItem('adminName');
       localStorage.removeItem('adminEmail');
+      
+      // Clear cookies
+      const { clearAuthCookies } = require('./cookies');
+      clearAuthCookies();
     }
   },
 };

@@ -9,6 +9,7 @@ import { Sparkles, Mail, Lock, User, ArrowRight, Github, CheckCircle2, Building2
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { authAPI } from "@/lib/api";
+import { setAuthCookies } from "@/lib/cookies";
 
 const benefits = [
   "AI-powered job matching",
@@ -70,10 +71,16 @@ export function SignupContent() {
       const response = await authAPI.signup(signupData);
       
       if (typeof window !== "undefined") {
+        // Set localStorage
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("userRole", response.user.role);
         if (response.token) {
           localStorage.setItem("authToken", response.token);
+        }
+        
+        // Set cookies for middleware protection
+        if (response.token) {
+          setAuthCookies(response.token, response.user.role, true);
         }
         
         if (response.user.role === "admin") {

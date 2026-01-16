@@ -9,6 +9,7 @@ import { Sparkles, Mail, Lock, ArrowRight, Github } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { authAPI } from "@/lib/api";
+import { setAuthCookies } from "@/lib/cookies";
 
 export function LoginContent() {
   const router = useRouter();
@@ -36,10 +37,16 @@ export function LoginContent() {
       const response = await authAPI.login(email, password);
       
       if (typeof window !== "undefined") {
+        // Set localStorage
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("userRole", response.user.role);
         if (response.token) {
           localStorage.setItem("authToken", response.token);
+        }
+        
+        // Set cookies for middleware protection
+        if (response.token) {
+          setAuthCookies(response.token, response.user.role, true);
         }
         
         if (response.user.role === "admin") {
@@ -58,7 +65,9 @@ export function LoginContent() {
           const redirect = urlParams.get("redirect");
           router.push(redirect || "/admin");
         } else {
-          router.push("/dashboard");
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirect = urlParams.get("redirect");
+          router.push(redirect || "/dashboard");
         }
       }
     } catch (err: any) {
