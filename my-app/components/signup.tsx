@@ -39,6 +39,9 @@ export function SignupContent() {
     
     setTimeout(() => {
       setIsLoading(false);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("isLoggedIn", "true");
+      }
       router.push("/dashboard");
     }, 1000);
   };

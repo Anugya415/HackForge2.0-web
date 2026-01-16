@@ -191,7 +191,7 @@ export function Hero() {
                   className="px-8 py-6 text-base font-semibold border-2 border-[#2a2a3a] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50 text-[#e8e8f0] w-full sm:w-auto transition-all duration-300" 
                   asChild
                 >
-                  <Link href="/upload-resume" className="flex items-center justify-center gap-2">
+                  <Link href="/resume-scanner" className="flex items-center justify-center gap-2">
                     <Upload className="h-5 w-5" />
                     Upload Resume
                   </Link>

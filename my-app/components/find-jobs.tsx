@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ApplicationForm } from "@/components/application-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +11,6 @@ import {
   Search, 
   MapPin, 
   Briefcase, 
-  DollarSign, 
   Clock, 
   Building2, 
   Filter,
@@ -31,7 +32,7 @@ const jobs = [
     company: "TechCorp",
     location: "San Francisco, CA",
     type: "Full-time",
-    salary: "$120k - $180k",
+    salary: "₹10L - ₹15L",
     posted: "2 days ago",
     match: 98,
     skills: ["React", "Node.js", "TypeScript", "AWS"],
@@ -44,7 +45,7 @@ const jobs = [
     company: "Design Studio",
     location: "Remote",
     type: "Full-time",
-    salary: "$90k - $130k",
+    salary: "₹7.5L - ₹11L",
     posted: "1 day ago",
     match: 95,
     skills: ["Figma", "Adobe XD", "User Research", "Prototyping"],
@@ -57,7 +58,7 @@ const jobs = [
     company: "StartupXYZ",
     location: "New York, NY",
     type: "Full-time",
-    salary: "$110k - $160k",
+    salary: "₹9L - ₹13L",
     posted: "3 days ago",
     match: 92,
     skills: ["Product Strategy", "Agile", "Analytics", "Roadmapping"],
@@ -69,7 +70,7 @@ const jobs = [
     company: "DataLabs",
     location: "Remote",
     type: "Full-time",
-    salary: "$130k - $190k",
+    salary: "₹11L - ₹16L",
     posted: "5 days ago",
     match: 89,
     skills: ["Python", "Machine Learning", "SQL", "TensorFlow"],
@@ -81,7 +82,7 @@ const jobs = [
     company: "CloudTech",
     location: "Toronto, ON",
     type: "Full-time",
-    salary: "$100k - $150k",
+    salary: "₹8L - ₹12L",
     posted: "1 week ago",
     match: 87,
     skills: ["Docker", "Kubernetes", "CI/CD", "AWS"],
@@ -93,7 +94,7 @@ const jobs = [
     company: "BrandCo",
     location: "London, UK",
     type: "Full-time",
-    salary: "$95k - $140k",
+    salary: "₹8L - ₹12L",
     posted: "4 days ago",
     match: 85,
     skills: ["Digital Marketing", "SEO", "Content Strategy", "Analytics"],
@@ -105,7 +106,7 @@ const jobs = [
     company: "WebSolutions",
     location: "Remote",
     type: "Contract",
-    salary: "$80k - $120k",
+    salary: "₹6.5L - ₹10L",
     posted: "2 days ago",
     match: 94,
     skills: ["React", "Next.js", "Tailwind CSS", "TypeScript"],
@@ -117,7 +118,7 @@ const jobs = [
     company: "API Systems",
     location: "Berlin, Germany",
     type: "Full-time",
-    salary: "$85k - $125k",
+    salary: "₹7L - ₹10L",
     posted: "6 days ago",
     match: 91,
     skills: ["Python", "Django", "PostgreSQL", "REST APIs"],
@@ -126,11 +127,55 @@ const jobs = [
 ];
 
 export function FindJobsContent() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [selectedLevel, setSelectedLevel] = useState("All Levels");
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<{ id: number; title: string; company: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+      setIsLoggedIn(loggedIn);
+      
+      const savedAppliedJobs = localStorage.getItem("appliedJobs");
+      if (savedAppliedJobs) {
+        setAppliedJobs(JSON.parse(savedAppliedJobs));
+      }
+    }
+  }, []);
+
+  const handleApply = (jobId: number) => {
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/jobs");
+      return;
+    }
+
+    const job = jobs.find(j => j.id === jobId);
+    if (job) {
+      setSelectedJob({ id: jobId, title: job.title, company: job.company });
+      setShowApplicationForm(true);
+    }
+  };
+
+  const handleApplicationSuccess = (applicationData: any) => {
+    setAppliedJobs([...appliedJobs, applicationData.jobId]);
+    setShowApplicationForm(false);
+    setSelectedJob(null);
+  };
+
+  const handleViewDetails = (jobId: number) => {
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/jobs");
+      return;
+    }
+    router.push(`/jobs/${jobId}`);
+  };
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch = 
@@ -433,7 +478,7 @@ export function FindJobsContent() {
                               <span>{job.type}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <DollarSign className="h-4 w-4 flex-shrink-0" />
+                              <span className="text-[#6366f1] font-semibold">₹</span>
                               <span>{job.salary}</span>
                             </div>
                           </div>
@@ -457,34 +502,34 @@ export function FindJobsContent() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row lg:flex-col sm:items-center lg:items-end gap-3">
-                      <div className="flex items-center gap-2">
-                        <motion.div
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#6366f1]/10"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <Star className="h-4 w-4 text-[#6366f1] fill-[#6366f1]" />
-                          <span className="text-sm font-semibold text-[#6366f1]">{job.match}% Match</span>
-                        </motion.div>
-                      </div>
+                    <div className={`flex flex-col sm:flex-row lg:flex-col sm:items-center lg:items-end gap-3 ${job.featured ? 'mt-8 lg:mt-0' : ''}`}>
                       <div className="flex items-center gap-2 text-xs text-[#9ca3af]">
                         <Clock className="h-3.5 w-3.5" />
                         <span>Posted {job.posted}</span>
                       </div>
                       <div className="flex gap-2 w-full sm:w-auto lg:w-full">
                         <Button
-                          asChild
+                          onClick={() => handleViewDetails(job.id)}
                           variant="outline"
                           className="flex-1 border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
                         >
-                          <Link href={`/jobs/${job.id}`}>View Details</Link>
+                          View Details
                         </Button>
-                        <Button
-                          asChild
-                          className="flex-1 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30"
-                        >
-                          <Link href={`/jobs/${job.id}`}>Apply Now</Link>
-                        </Button>
+                        {appliedJobs && appliedJobs.includes(job.id) ? (
+                          <Button
+                            disabled
+                            className="flex-1 bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/30 cursor-not-allowed"
+                          >
+                            Applied
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handleApply(job.id)}
+                            className="flex-1 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30"
+                          >
+                            Apply Now
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -517,6 +562,19 @@ export function FindJobsContent() {
           </motion.div>
         )}
       </section>
+
+      {showApplicationForm && selectedJob && (
+        <ApplicationForm
+          jobId={selectedJob.id}
+          jobTitle={selectedJob.title}
+          company={selectedJob.company}
+          onClose={() => {
+            setShowApplicationForm(false);
+            setSelectedJob(null);
+          }}
+          onSuccess={handleApplicationSuccess}
+        />
+      )}
     </div>
   );
 }

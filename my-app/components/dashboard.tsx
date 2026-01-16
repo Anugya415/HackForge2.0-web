@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,6 @@ import {
   Bell,
   User,
   MapPin,
-  DollarSign,
   Eye,
   Zap,
   Heart,
@@ -36,6 +35,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const mockUser = {
   name: "Alex Johnson",
@@ -63,7 +63,7 @@ const applications = [
     date: "2 days ago",
     interviewDate: "Dec 15, 2024",
     location: "San Francisco, CA",
-    salary: "$120k - $180k",
+    salary: "₹10L - ₹15L",
   },
   {
     id: 2,
@@ -73,7 +73,7 @@ const applications = [
     match: 95,
     date: "5 days ago",
     location: "Remote",
-    salary: "$90k - $130k",
+    salary: "₹7.5L - ₹11L",
   },
   {
     id: 3,
@@ -83,7 +83,7 @@ const applications = [
     match: 92,
     date: "1 week ago",
     location: "New York, NY",
-    salary: "$110k - $160k",
+    salary: "₹9L - ₹13L",
   },
   {
     id: 4,
@@ -94,7 +94,7 @@ const applications = [
     date: "3 days ago",
     interviewDate: "Dec 18, 2024",
     location: "Remote",
-    salary: "$130k - $190k",
+    salary: "₹11L - ₹16L",
   },
 ];
 
@@ -146,8 +146,96 @@ const quickActions = [
   { title: "Practice Interview", icon: MessageSquare, href: "/mock-interview", gradient: "from-[#10b981] to-[#6366f1]" },
 ];
 
+const featuredJobs = [
+  {
+    id: 1,
+    jobTitle: "Senior Full Stack Developer",
+    company: "TechCorp",
+    location: "San Francisco, CA",
+    type: "Full-time",
+    salary: "₹10L - ₹15L",
+    posted: "2 days ago",
+    match: 98,
+    skills: ["React", "Node.js", "TypeScript", "AWS"],
+    featured: true,
+  },
+  {
+    id: 2,
+    jobTitle: "UX/UI Designer",
+    company: "Design Studio",
+    location: "Remote",
+    type: "Full-time",
+    salary: "₹7.5L - ₹11L",
+    posted: "1 day ago",
+    match: 95,
+    skills: ["Figma", "Adobe XD", "User Research", "Prototyping"],
+    featured: true,
+  },
+  {
+    id: 3,
+    jobTitle: "Product Manager",
+    company: "StartupXYZ",
+    location: "New York, NY",
+    type: "Full-time",
+    salary: "₹9L - ₹13L",
+    posted: "3 days ago",
+    match: 92,
+    skills: ["Product Strategy", "Agile", "Analytics", "Roadmapping"],
+  },
+  {
+    id: 4,
+    jobTitle: "Data Scientist",
+    company: "DataLabs",
+    location: "Remote",
+    type: "Full-time",
+    salary: "₹11L - ₹16L",
+    posted: "5 days ago",
+    match: 89,
+    skills: ["Python", "Machine Learning", "SQL", "TensorFlow"],
+  },
+];
+
 export function DashboardContent() {
-  const [activeTab, setActiveTab] = useState<"applications" | "saved" | "recommendations">("applications");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"applications" | "saved" | "recommendations" | "find-jobs">("applications");
+  const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedJobs = localStorage.getItem("savedJobs");
+      if (savedJobs) {
+        setSavedJobIds(JSON.parse(savedJobs));
+      }
+    }
+  }, []);
+
+  const handleSave = (jobId: number, job: any) => {
+    if (typeof window !== "undefined") {
+      const savedJobs = JSON.parse(localStorage.getItem("savedJobs") || "[]");
+      
+      if (savedJobIds.includes(jobId)) {
+        const updatedSavedJobs = savedJobIds.filter(id => id !== jobId);
+        setSavedJobIds(updatedSavedJobs);
+        const updatedSavedJobsList = savedJobs.filter((savedJob: any) => savedJob.id !== jobId);
+        localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobsList));
+      } else {
+        const newSavedJob = {
+          id: jobId,
+          jobTitle: job.jobTitle,
+          company: job.company,
+          match: job.match,
+          location: job.location || "",
+          salary: job.salary || "",
+          type: job.type || "Full-time",
+          postedDate: job.posted || "",
+          savedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        };
+        const updatedSavedJobs = [...savedJobs, newSavedJob];
+        setSavedJobIds([...savedJobIds, jobId]);
+        localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobs));
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen pt-16 lg:pt-8">
@@ -214,23 +302,29 @@ export function DashboardContent() {
                         <BriefcaseIcon className="h-4 w-4" />
                         <span>{mockUser.experience}</span>
                       </div>
-                    </div>
-                  </div>
+                </div>
+              </div>
                   <div className="flex gap-3">
                     <Button
+                      asChild
                       size="lg"
                       variant="outline"
                       className="border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
                     >
-                      <Search className="h-4 w-4 mr-2" />
-                      Find Jobs
+                      <Link href="/jobs">
+                        <Search className="h-4 w-4 mr-2" />
+                        Find Jobs
+                      </Link>
                     </Button>
                     <Button
+                      asChild
                       size="lg"
                       className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30"
                     >
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Resume
+                      <Link href="/resume-scanner">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Resume
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -322,6 +416,16 @@ export function DashboardContent() {
                 >
                   Recommendations
                 </button>
+                <button
+                  onClick={() => setActiveTab("find-jobs")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    activeTab === "find-jobs"
+                      ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white"
+                      : "text-[#9ca3af] hover:text-[#e8e8f0]"
+                  }`}
+                >
+                  Find Jobs
+                </button>
               </div>
               <Button variant="outline" asChild className="border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50">
                 <Link href="/jobs">View All Jobs</Link>
@@ -329,74 +433,136 @@ export function DashboardContent() {
             </div>
 
             {activeTab === "applications" && (
-              <div className="space-y-4">
-                {applications.map((application, index) => (
-                  <motion.div
-                    key={application.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <Card className="group relative overflow-hidden border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-sm hover:bg-[#151520] hover:border-[#6366f1]/30 transition-all duration-500 hover:shadow-xl hover:shadow-[#6366f1]/10">
-                      <motion.div
-                        className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"
-                        whileHover={{ scaleX: 1 }}
-                      />
-                      
-                      <CardHeader>
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                          <div className="flex-1">
-                            <CardTitle className="text-xl sm:text-2xl mb-2 text-[#e8e8f0] group-hover:text-[#a5b4fc] transition-colors">
-                              {application.jobTitle}
-                            </CardTitle>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-[#9ca3af] mb-4">
-                              <div className="flex items-center gap-1.5">
-                                <Briefcase className="h-4 w-4" />
-                                <span className="font-medium">{application.company}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="h-4 w-4" />
-                                <span>{application.location}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <DollarSign className="h-4 w-4" />
-                                <span>{application.salary}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="h-4 w-4" />
-                                <span>Applied {application.date}</span>
-                              </div>
-                              {application.interviewDate && (
+              <>
+                <div className="space-y-4">
+                  {applications.map((application, index) => (
+                    <motion.div
+                      key={application.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <Card className="group relative overflow-hidden border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-sm hover:bg-[#151520] hover:border-[#6366f1]/30 transition-all duration-500 hover:shadow-xl hover:shadow-[#6366f1]/10">
+                        <motion.div
+                          className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"
+                          whileHover={{ scaleX: 1 }}
+                        />
+                        
+                        <CardHeader>
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div className="flex-1">
+                              <CardTitle className="text-xl sm:text-2xl mb-2 text-[#e8e8f0] group-hover:text-[#a5b4fc] transition-colors">
+                                {application.jobTitle}
+                              </CardTitle>
+                              <div className="flex flex-wrap items-center gap-3 text-sm text-[#9ca3af] mb-4">
                                 <div className="flex items-center gap-1.5">
-                                  <Calendar className="h-4 w-4" />
-                                  <span>Interview: {application.interviewDate}</span>
+                                  <Briefcase className="h-4 w-4" />
+                                  <span className="font-medium">{application.company}</span>
                                 </div>
-                              )}
-                            </div>
-                            
-                            <div className="flex flex-wrap items-center gap-3">
-                              <Badge className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white border-0 shadow-lg shadow-[#6366f1]/30">
-                                {application.status}
-                              </Badge>
-                              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#6366f1]/10">
-                                <Star className="h-4 w-4 text-[#6366f1] fill-[#6366f1]" />
-                                <span className="text-sm font-semibold text-[#6366f1]">{application.match}% Match</span>
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="h-4 w-4" />
+                                  <span>{application.location}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[#6366f1] font-semibold">₹</span>
+                                  <span>{application.salary}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="h-4 w-4" />
+                                  <span>Applied {application.date}</span>
+                                </div>
+                                {application.interviewDate && (
+                                  <div className="flex items-center gap-1.5">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Interview: {application.interviewDate}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center gap-3">
+                                <Badge className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white border-0 shadow-lg shadow-[#6366f1]/30">
+                                  {application.status}
+                                </Badge>
                               </div>
                             </div>
+                            <Button
+                              onClick={() => {
+                                router.push(`/dashboard/applications?appId=${application.id}`);
+                              }}
+                              variant="outline"
+                              className="border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                            >
+                              View Details
+                            </Button>
                           </div>
-                          <Button
-                            asChild
-                            variant="outline"
-                            className="border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
-                          >
-                            <Link href={`/applications/${application.id}`}>View Details</Link>
-                          </Button>
+                        </CardHeader>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                  <Card className="border border-[#6366f1]/30 bg-gradient-to-br from-[#6366f1]/10 to-[#8b5cf6]/10 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-[#e8e8f0]">
+                        <Target className="h-5 w-5 inline mr-2 text-[#6366f1]" />
+                        Recommendations
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <Award className="h-5 w-5 text-[#6366f1] flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-medium text-[#e8e8f0] mb-1">5 New Matches</p>
+                            <p className="text-sm text-[#9ca3af]">Jobs matching your profile</p>
+                          </div>
                         </div>
-                      </CardHeader>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="w-full border-2 border-[#6366f1]/50 text-[#e8e8f0] hover:bg-[#6366f1]/20 hover:border-[#6366f1]"
+                        >
+                          <Link href="/dashboard/suggestions">View Matches</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-[#e8e8f0] flex items-center gap-2">
+                        <Bell className="h-5 w-5 text-[#6366f1]" />
+                        Recent Activity
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex gap-3">
+                          <div className="w-2 h-2 rounded-full bg-[#6366f1] mt-2 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm text-[#e8e8f0]">New job match found</p>
+                            <p className="text-xs text-[#9ca3af]">2 hours ago</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="w-2 h-2 rounded-full bg-[#8b5cf6] mt-2 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm text-[#e8e8f0]">Application status updated</p>
+                            <p className="text-xs text-[#9ca3af]">1 day ago</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="w-2 h-2 rounded-full bg-[#ec4899] mt-2 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm text-[#e8e8f0]">Profile viewed by recruiter</p>
+                            <p className="text-xs text-[#9ca3af]">2 days ago</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
             )}
 
             {activeTab === "saved" && (
@@ -420,18 +586,19 @@ export function DashboardContent() {
                               <span>•</span>
                               <span>Saved {job.savedDate}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#6366f1]/10 w-fit">
-                              <Star className="h-4 w-4 text-[#6366f1] fill-[#6366f1]" />
-                              <span className="text-sm font-semibold text-[#6366f1]">{job.match}% Match</span>
-                            </div>
                           </div>
                           <div className="flex gap-2">
                             <Button
+                              onClick={() => handleSave(job.id, job)}
                               variant="outline"
                               size="sm"
-                              className="border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                              className={`border-2 ${
+                                savedJobIds.includes(job.id)
+                                  ? "border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]"
+                                  : "border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                              }`}
                             >
-                              <Bookmark className="h-4 w-4" />
+                              <Bookmark className={`h-4 w-4 ${savedJobIds.includes(job.id) ? "fill-[#6366f1]" : ""}`} />
                             </Button>
                             <Button
                               asChild
@@ -474,18 +641,19 @@ export function DashboardContent() {
                               <span>•</span>
                               <span>{job.reason}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#6366f1]/10 w-fit">
-                              <Star className="h-4 w-4 text-[#6366f1] fill-[#6366f1]" />
-                              <span className="text-sm font-semibold text-[#6366f1]">{job.match}% Match</span>
-                            </div>
                           </div>
                           <div className="flex gap-2">
                             <Button
+                              onClick={() => handleSave(job.id, job)}
                               variant="outline"
                               size="sm"
-                              className="border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                              className={`border-2 ${
+                                savedJobIds.includes(job.id)
+                                  ? "border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]"
+                                  : "border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                              }`}
                             >
-                              <Bookmark className="h-4 w-4" />
+                              <Bookmark className={`h-4 w-4 ${savedJobIds.includes(job.id) ? "fill-[#6366f1]" : ""}`} />
                             </Button>
                             <Button
                               asChild
@@ -500,6 +668,97 @@ export function DashboardContent() {
                     </Card>
                   </motion.div>
                 ))}
+              </div>
+            )}
+
+            {activeTab === "find-jobs" && (
+              <div className="space-y-4">
+                {featuredJobs.map((job, index) => (
+                  <motion.div
+                    key={job.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <Card className="group relative overflow-hidden border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-sm hover:bg-[#151520] hover:border-[#6366f1]/30 transition-all duration-500 hover:shadow-xl hover:shadow-[#6366f1]/10">
+                      <motion.div
+                        className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"
+                        whileHover={{ scaleX: 1 }}
+                      />
+                      {job.featured && (
+                        <Badge className="absolute top-4 right-4 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white border-0 z-10 shadow-lg shadow-[#6366f1]/30">
+                          Featured
+                        </Badge>
+                      )}
+                      <CardHeader>
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                          <div className="flex-1">
+                            <CardTitle className="text-xl sm:text-2xl mb-2 text-[#e8e8f0] group-hover:text-[#a5b4fc] transition-colors">
+                              {job.jobTitle}
+                            </CardTitle>
+                            <div className={`flex flex-wrap items-center gap-3 text-sm text-[#9ca3af] mb-4 ${job.featured ? 'pr-24' : ''}`}>
+                              <div className="flex items-center gap-1.5">
+                                <Briefcase className="h-4 w-4" />
+                                <span className="font-medium">{job.company}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="h-4 w-4" />
+                                <span>{job.location}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[#6366f1] font-semibold">₹</span>
+                                <span>{job.salary}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="h-4 w-4" />
+                                <span>Posted {job.posted}</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 mb-4">
+                              {job.skills.slice(0, 4).map((skill, skillIndex) => (
+                                <Badge
+                                  key={skillIndex}
+                                  className="bg-[#1e1e2e] text-[#9ca3af] border border-[#2a2a3a]"
+                                >
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 sm:min-w-[140px]">
+                            <Button
+                              asChild
+                              className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0"
+                            >
+                              <Link href={`/jobs/${job.id}`}>Apply Now</Link>
+                            </Button>
+                            <Button
+                              onClick={() => handleSave(job.id, job)}
+                              variant="outline"
+                              className={`border-2 ${
+                                savedJobIds.includes(job.id)
+                                  ? "border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]"
+                                  : "border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                              }`}
+                            >
+                              <Bookmark className={`h-4 w-4 mr-2 ${savedJobIds.includes(job.id) ? "fill-[#6366f1]" : ""}`} />
+                              {savedJobIds.includes(job.id) ? "Saved" : "Save"}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+              </Card>
+                  </motion.div>
+                ))}
+                <div className="pt-4">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                  >
+                    <Link href="/jobs">View All Jobs</Link>
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -540,54 +799,55 @@ export function DashboardContent() {
             </Card>
 
             <Card className="border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-[#e8e8f0] flex items-center gap-2">
-                  <User className="h-5 w-5 text-[#6366f1]" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-bold text-[#e8e8f0] flex items-center gap-2">
+                  <User className="h-4 w-4 text-[#6366f1]" />
                   Profile Overview
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 pb-4 border-b border-[#2a2a3a]">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-[#6366f1]/30">
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pb-3 border-b border-[#2a2a3a]">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-[#6366f1]/30">
                       {mockUser.avatar}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-[#e8e8f0]">{mockUser.name}</h3>
-                      <p className="text-sm text-[#9ca3af]">{mockUser.title}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-[#e8e8f0] truncate">{mockUser.name}</h3>
+                      <p className="text-xs text-[#9ca3af] truncate">{mockUser.title}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-3 text-sm">
+                  <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2 text-[#9ca3af]">
-                      <Mail className="h-4 w-4 text-[#6366f1]" />
-                      <span>{mockUser.email}</span>
+                      <Mail className="h-3 w-3 text-[#6366f1]" />
+                      <span className="truncate">{mockUser.email}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[#9ca3af]">
-                      <MapPin className="h-4 w-4 text-[#6366f1]" />
-                      <span>{mockUser.location}</span>
+                      <MapPin className="h-3 w-3 text-[#6366f1]" />
+                      <span className="truncate">{mockUser.location}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[#9ca3af]">
-                      <BriefcaseIcon className="h-4 w-4 text-[#6366f1]" />
-                      <span>{mockUser.experience}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[#9ca3af]">
-                      <GraduationCap className="h-4 w-4 text-[#6366f1]" />
-                      <span>{mockUser.education}</span>
+                      <BriefcaseIcon className="h-3 w-3 text-[#6366f1]" />
+                      <span className="truncate">{mockUser.experience}</span>
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-[#2a2a3a]">
-                    <p className="text-sm font-semibold text-[#e8e8f0] mb-2">Skills</p>
-                    <div className="flex flex-wrap gap-2">
-                      {mockUser.skills.map((skill, index) => (
+                  <div className="pt-2 border-t border-[#2a2a3a]">
+                    <p className="text-xs font-semibold text-[#e8e8f0] mb-1.5">Skills</p>
+                    <div className="flex flex-wrap gap-1">
+                      {mockUser.skills.slice(0, 4).map((skill, index) => (
                         <Badge
                           key={index}
-                          className="bg-[#1e1e2e] text-[#9ca3af] border border-[#2a2a3a]"
+                          className="bg-[#1e1e2e] text-[#9ca3af] border border-[#2a2a3a] text-xs px-1.5 py-0.5"
                         >
                           {skill}
                         </Badge>
                       ))}
+                      {mockUser.skills.length > 4 && (
+                        <Badge className="bg-[#1e1e2e] text-[#9ca3af] border border-[#2a2a3a] text-xs px-1.5 py-0.5">
+                          +{mockUser.skills.length - 4}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -595,19 +855,19 @@ export function DashboardContent() {
             </Card>
 
             <Card className="border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-[#e8e8f0]">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-bold text-[#e8e8f0]">
                   Profile Completion
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="pt-0">
+                <div className="space-y-3">
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-[#9ca3af]">Overall</span>
-                      <span className="text-sm font-semibold bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] bg-clip-text text-transparent">{mockUser.profileComplete}%</span>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs text-[#9ca3af]">Overall</span>
+                      <span className="text-xs font-semibold bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] bg-clip-text text-transparent">{mockUser.profileComplete}%</span>
                     </div>
-                    <div className="w-full h-2 bg-[#2a2a3a] rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-[#2a2a3a] rounded-full overflow-hidden">
                       <motion.div
                         className="h-full bg-gradient-to-r from-[#6366f1] to-[#8b5cf6]"
                         initial={{ width: 0 }}
@@ -617,95 +877,36 @@ export function DashboardContent() {
                     </div>
                   </div>
                   
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-1.5 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-[#9ca3af]">Resume</span>
-                      <CheckCircle2 className="h-4 w-4 text-[#10b981]" />
+                      <CheckCircle2 className="h-3 w-3 text-[#10b981]" />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[#9ca3af]">Skills</span>
-                      <CheckCircle2 className="h-4 w-4 text-[#10b981]" />
+                      <CheckCircle2 className="h-3 w-3 text-[#10b981]" />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[#9ca3af]">Experience</span>
-                      <span className="text-[#9ca3af]">Incomplete</span>
+                      <span className="text-[#9ca3af] text-xs">Incomplete</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[#9ca3af]">Education</span>
-                      <CheckCircle2 className="h-4 w-4 text-[#10b981]" />
+                      <CheckCircle2 className="h-3 w-3 text-[#10b981]" />
                     </div>
                   </div>
 
                   <Button
                     asChild
-                    className="w-full bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30"
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30 text-xs"
                   >
-                    <Link href="/profile/edit">Complete Profile</Link>
+                    <Link href="/dashboard/profile">Complete Profile</Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border border-[#6366f1]/30 bg-gradient-to-br from-[#6366f1]/10 to-[#8b5cf6]/10 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-[#e8e8f0]">
-                  <Target className="h-5 w-5 inline mr-2 text-[#6366f1]" />
-                  Recommendations
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Award className="h-5 w-5 text-[#6366f1] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-[#e8e8f0] mb-1">5 New Matches</p>
-                      <p className="text-sm text-[#9ca3af]">Jobs matching your profile</p>
-                    </div>
-                  </div>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full border-2 border-[#6366f1]/50 text-[#e8e8f0] hover:bg-[#6366f1]/20 hover:border-[#6366f1]"
-                  >
-                    <Link href="/jobs">View Matches</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-[#e8e8f0] flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-[#6366f1]" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#6366f1] mt-2 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm text-[#e8e8f0]">New job match found</p>
-                      <p className="text-xs text-[#9ca3af]">2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#8b5cf6] mt-2 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm text-[#e8e8f0]">Application status updated</p>
-                      <p className="text-xs text-[#9ca3af]">1 day ago</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#ec4899] mt-2 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm text-[#e8e8f0]">Profile viewed by recruiter</p>
-                      <p className="text-xs text-[#9ca3af]">2 days ago</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>

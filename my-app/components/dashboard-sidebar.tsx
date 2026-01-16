@@ -16,8 +16,9 @@ import {
   LogOut,
   Menu,
   X,
-  Bell,
-  Sparkles
+  Sparkles,
+  Search,
+  Lightbulb
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -31,9 +32,11 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Briefcase, label: "Applications", href: "/dashboard/applications" },
   { icon: Bookmark, label: "Saved Jobs", href: "/dashboard/saved" },
+  { icon: Search, label: "Find Jobs", href: "/jobs" },
   { icon: FileText, label: "My Resume", href: "/dashboard/resume" },
   { icon: BarChart3, label: "Analytics", href: "/dashboard/analytics" },
   { icon: MessageSquare, label: "Interviews", href: "/dashboard/interviews" },
+  { icon: Lightbulb, label: "Suggestions", href: "/dashboard/suggestions" },
   { icon: User, label: "Profile", href: "/dashboard/profile" },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
@@ -116,6 +119,12 @@ export function DashboardSidebar() {
               <div className="mt-6 pt-6 border-t border-[#2a2a3a]">
                 <Button
                   variant="ghost"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      localStorage.removeItem("isLoggedIn");
+                      window.location.href = "/";
+                    }
+                  }}
                   className="w-full justify-start text-[#9ca3af] hover:text-[#ef4444] hover:bg-[#ef4444]/10"
                 >
                   <LogOut className="h-5 w-5 mr-3" />
@@ -161,7 +170,9 @@ export function DashboardSidebar() {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href === "/dashboard" && pathname === "/dashboard");
+            const isActive = pathname === item.href || 
+              (item.href === "/dashboard" && pathname === "/dashboard") ||
+              (item.href === "/jobs" && pathname.startsWith("/jobs"));
             return (
               <Link
                 key={item.href}
@@ -187,16 +198,15 @@ export function DashboardSidebar() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-[#2a2a3a] space-y-2">
+        <div className="p-4 border-t border-[#2a2a3a]">
           <Button
             variant="ghost"
-            className="w-full justify-start text-[#9ca3af] hover:text-[#e8e8f0] hover:bg-[#1e1e2e]"
-          >
-            <Bell className="h-5 w-5 mr-3" />
-            Notifications
-          </Button>
-          <Button
-            variant="ghost"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("isLoggedIn");
+                window.location.href = "/";
+              }
+            }}
             className="w-full justify-start text-[#9ca3af] hover:text-[#ef4444] hover:bg-[#ef4444]/10"
           >
             <LogOut className="h-5 w-5 mr-3" />
