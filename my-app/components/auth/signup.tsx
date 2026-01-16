@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Mail, Lock, User, ArrowRight, Github, CheckCircle2 } from "lucide-react";
+import { Sparkles, Mail, Lock, User, ArrowRight, Github, CheckCircle2, Building2, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -16,6 +16,13 @@ const benefits = [
   "Career analytics dashboard",
 ];
 
+const adminBenefits = [
+  "Manage all users and applications",
+  "Platform analytics and insights",
+  "Company management tools",
+  "Recruitment dashboard",
+];
+
 export function SignupContent() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -23,6 +30,8 @@ export function SignupContent() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "user",
+    company: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,8 +50,26 @@ export function SignupContent() {
       setIsLoading(false);
       if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userRole", formData.role);
+        
+        if (formData.role === "admin") {
+          localStorage.setItem("isAdminLoggedIn", "true");
+          localStorage.setItem("userRole", "admin");
+          if (formData.company) {
+            localStorage.setItem("adminCompany", formData.company);
+          }
+          if (formData.name) {
+            localStorage.setItem("adminName", formData.name);
+          }
+          if (formData.email) {
+            localStorage.setItem("adminEmail", formData.email);
+          }
+          router.push("/admin");
+        } else {
+          localStorage.setItem("userRole", "user");
+          router.push("/dashboard");
+        }
       }
-      router.push("/dashboard");
     }, 1000);
   };
 
@@ -186,6 +213,65 @@ export function SignupContent() {
                         />
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <label htmlFor="role" className="text-sm font-medium text-[#e8e8f0]">
+                        I am a
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, role: "user" })}
+                          className={`p-4 rounded-lg border-2 transition-all ${
+                            formData.role === "user"
+                              ? "border-[#6366f1] bg-[#6366f1]/10"
+                              : "border-[#2a2a3a] bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                          }`}
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            <User className={`h-5 w-5 ${formData.role === "user" ? "text-[#6366f1]" : "text-[#9ca3af]"}`} />
+                            <span className={`text-sm font-medium ${formData.role === "user" ? "text-[#e8e8f0]" : "text-[#9ca3af]"}`}>
+                              Job Seeker
+                            </span>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, role: "admin" })}
+                          className={`p-4 rounded-lg border-2 transition-all ${
+                            formData.role === "admin"
+                              ? "border-[#6366f1] bg-[#6366f1]/10"
+                              : "border-[#2a2a3a] bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                          }`}
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            <Briefcase className={`h-5 w-5 ${formData.role === "admin" ? "text-[#6366f1]" : "text-[#9ca3af]"}`} />
+                            <span className={`text-sm font-medium ${formData.role === "admin" ? "text-[#e8e8f0]" : "text-[#9ca3af]"}`}>
+                              Recruiter
+                            </span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                    {formData.role === "admin" && (
+                      <div className="space-y-2">
+                        <label htmlFor="company" className="text-sm font-medium text-[#e8e8f0]">
+                          Company Name
+                        </label>
+                        <div className="relative">
+                          <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#9ca3af]" />
+                          <Input
+                            id="company"
+                            name="company"
+                            type="text"
+                            placeholder="Your company name"
+                            value={formData.company}
+                            onChange={handleChange}
+                            required={formData.role === "admin"}
+                            className="pl-10 h-12 border-2 border-[#2a2a3a] bg-[#1e1e2e] text-[#e8e8f0] focus:border-[#6366f1] placeholder:text-[#9ca3af]"
+                          />
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-start space-x-2">
                       <input
                         type="checkbox"
@@ -206,7 +292,7 @@ export function SignupContent() {
                     </div>
                     <Button
                       type="submit"
-                      disabled={isLoading || !formData.name || !formData.email || !formData.password || !formData.confirmPassword}
+                      disabled={isLoading || !formData.name || !formData.email || !formData.password || !formData.confirmPassword || (formData.role === "admin" && !formData.company)}
                       className="w-full h-12 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isLoading ? "Creating Account..." : "Create Account"}
@@ -234,7 +320,7 @@ export function SignupContent() {
                   <div className="space-y-3 pt-4 border-t border-[#2a2a3a]">
                     <p className="text-sm font-semibold text-[#e8e8f0]">What you'll get:</p>
                     <div className="space-y-2">
-                      {benefits.map((benefit, index) => (
+                      {(formData.role === "admin" ? adminBenefits : benefits).map((benefit, index) => (
                         <motion.div
                           key={benefit}
                           initial={{ opacity: 0, x: -10 }}

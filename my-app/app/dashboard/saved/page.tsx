@@ -1,5 +1,5 @@
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { SavedJobsContent } from "@/components/saved-jobs";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { SavedJobsContent } from "@/components/dashboard/saved-jobs";
 
 export const metadata = {
   title: "Saved Jobs - Dashboard | GROEI",

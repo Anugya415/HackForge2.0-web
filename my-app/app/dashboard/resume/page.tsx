@@ -1,5 +1,5 @@
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { ResumeContent } from "@/components/resume-manager";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { ResumeContent } from "@/components/dashboard/resume-manager";
 
 export const metadata = {
   title: "My Resume - Dashboard | GROEI",

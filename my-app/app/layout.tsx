@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Chatbot } from "@/components/chatbot";
+import { Chatbot } from "@/components/features/chatbot";
 
 const inter = Inter({
   variable: "--font-inter",

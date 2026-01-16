@@ -1,5 +1,5 @@
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { AnalyticsContent } from "@/components/analytics";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { AnalyticsContent } from "@/components/dashboard/analytics";
 
 export const metadata = {
   title: "Analytics - Dashboard | GROEI",

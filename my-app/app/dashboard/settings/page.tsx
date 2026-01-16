@@ -1,5 +1,5 @@
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { SettingsContent } from "@/components/settings";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { SettingsContent } from "@/components/dashboard/settings";
 
 export const metadata = {
   title: "Settings - Dashboard | GROEI",

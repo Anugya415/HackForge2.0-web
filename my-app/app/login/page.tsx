@@ -1,6 +1,6 @@
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { LoginContent } from "@/components/login";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
+import { LoginContent } from "@/components/auth/login";
 
 export const metadata = {
   title: "Login - GROEI",

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { FindJobsContent } from "@/components/find-jobs";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
+import { FindJobsContent } from "@/components/features/find-jobs";
 
 export default function JobsPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

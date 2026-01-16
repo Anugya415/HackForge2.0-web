@@ -1,6 +1,6 @@
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { ResumeScannerContent } from "@/components/resume-scanner";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
+import { ResumeScannerContent } from "@/components/features/resume-scanner";
 
 export const metadata = {
   title: "Resume Scanner - GROEI",

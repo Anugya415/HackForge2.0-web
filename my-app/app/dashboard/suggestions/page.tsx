@@ -1,5 +1,5 @@
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { SuggestionsContent } from "@/components/suggestions";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { SuggestionsContent } from "@/components/dashboard/suggestions";
 
 export const metadata = {
   title: "Suggestions - Dashboard | GROEI",

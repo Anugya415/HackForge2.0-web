@@ -35,7 +35,30 @@ export function LoginContent() {
         localStorage.setItem("isLoggedIn", "true");
         const urlParams = new URLSearchParams(window.location.search);
         const redirect = urlParams.get("redirect");
-        router.push(redirect || "/dashboard");
+        
+        const adminEmails: { [key: string]: string } = {
+          "sarah.johnson@techcorp.com": "TechCorp",
+          "admin@example.com": "TechCorp",
+          "recruiter@example.com": "TechCorp"
+        };
+        const isAdmin = adminEmails.hasOwnProperty(email.toLowerCase());
+        
+        if (isAdmin) {
+          localStorage.setItem("isAdminLoggedIn", "true");
+          localStorage.setItem("userRole", "admin");
+          localStorage.setItem("adminCompany", adminEmails[email.toLowerCase()]);
+          localStorage.setItem("adminEmail", email);
+          const adminNames: { [key: string]: string } = {
+            "sarah.johnson@techcorp.com": "Sarah Johnson",
+            "admin@example.com": "Admin User",
+            "recruiter@example.com": "Recruiter"
+          };
+          localStorage.setItem("adminName", adminNames[email.toLowerCase()] || "Recruiter");
+          router.push(redirect || "/admin");
+        } else {
+          localStorage.setItem("userRole", "user");
+          router.push(redirect || "/dashboard");
+        }
       }
     }, 1000);
   };

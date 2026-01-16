@@ -1,5 +1,5 @@
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { ProfileContent } from "@/components/profile-manager";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { ProfileContent } from "@/components/dashboard/profile-manager";
 
 export const metadata = {
   title: "Profile - Dashboard | GROEI",

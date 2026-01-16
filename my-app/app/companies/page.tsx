@@ -1,6 +1,6 @@
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { CompaniesContent } from "@/components/companies";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
+import { CompaniesContent } from "@/components/features/companies";
 
 export const metadata = {
   title: "Companies - GROEI",
