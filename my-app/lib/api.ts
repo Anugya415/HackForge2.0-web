@@ -204,6 +204,10 @@ export const jobsAPI = {
   getCompanyJobs: async () => {
     return api.get<{ jobs: any[] }>('/jobs/company/my');
   },
+
+  getSuggestions: async () => {
+    return api.get<{ jobs: any[]; userSkills: string[] }>('/jobs/suggestions');
+  },
 };
 
 export const applicationsAPI = {
@@ -273,5 +277,51 @@ export const analyticsAPI = {
     }
     const query = queryParams.toString();
     return api.get<{ daily_analytics: any[]; status_distribution: any[] }>(`/analytics/company${query ? `?${query}` : ''}`);
+  },
+};
+
+export const resumeAPI = {
+  uploadResume: async (file: File) => {
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    const response = await fetch(`${API_BASE_URL}/resumes/upload`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to upload resume' }));
+      throw new Error(errorData.error || 'Failed to upload resume');
+    }
+
+    return response.json();
+  },
+
+  getMyResumes: async () => {
+    return api.get<{ resumes: any[] }>('/resumes/my');
+  },
+
+  deleteResume: async (id: number) => {
+    return api.delete<{ message: string }>(`/resumes/${id}`);
+  },
+
+  analyzeResume: async (file: File) => {
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    const response = await fetch(`${API_BASE_URL}/resume-analysis/analyze`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to analyze resume' }));
+      throw new Error(errorData.error || 'Failed to analyze resume');
+    }
+
+    return response.json();
   },
 };

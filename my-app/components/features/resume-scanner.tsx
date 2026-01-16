@@ -53,17 +53,76 @@ const improvements = [
 ];
 
 export function ResumeScannerContent() {
+  const [file, setFile] = useState<File | null>(null);
   const [fileUploaded, setFileUploaded] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState("");
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [error, setError] = useState<string>("");
 
-  const handleFileUpload = () => {
-    setFileUploaded(true);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        alert("File size must be less than 5MB");
+        return;
+      }
+      setFile(selectedFile);
+      setFileUploaded(true);
+      setAnalysisComplete(false);
+      setAnalysisData(null);
+      setError("");
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!file) return;
+    
     setAnalyzing(true);
-    setTimeout(() => {
+    setAnalysisProgress(0);
+    setAnalysisComplete(false);
+    setError("");
+
+    const steps = [
+      { progress: 15, message: "Extracting text from resume..." },
+      { progress: 30, message: "Analyzing formatting and structure..." },
+      { progress: 45, message: "Checking ATS compatibility..." },
+      { progress: 60, message: "Evaluating keywords and skills..." },
+      { progress: 75, message: "Calculating scores..." },
+      { progress: 90, message: "Generating recommendations..." },
+      { progress: 100, message: "Analysis complete!" },
+    ];
+
+    let currentStepIndex = 0;
+    const progressInterval = setInterval(() => {
+      if (currentStepIndex < steps.length - 1) {
+        setAnalysisProgress(steps[currentStepIndex].progress);
+        setCurrentStep(steps[currentStepIndex].message);
+        currentStepIndex++;
+      }
+    }, 600);
+
+    try {
+      const { resumeAPI } = await import("@/lib/api");
+      const response = await resumeAPI.analyzeResume(file);
+      
+      clearInterval(progressInterval);
+      setAnalysisProgress(100);
+      setCurrentStep(steps[steps.length - 1].message);
+      
+      setTimeout(() => {
+        setAnalysisData(response.analysis);
+        setAnalyzing(false);
+        setAnalysisComplete(true);
+      }, 500);
+    } catch (err: any) {
+      clearInterval(progressInterval);
+      setError(err.message || "Failed to analyze resume");
       setAnalyzing(false);
-      setAnalysisComplete(true);
-    }, 2000);
+      setAnalysisComplete(false);
+    }
   };
 
   return (
@@ -129,7 +188,7 @@ export function ResumeScannerContent() {
               <CardContent className="p-6 sm:p-8">
                 {!fileUploaded ? (
                   <div className="space-y-6">
-                    <div className="border-2 border-dashed border-[#2a2a3a] rounded-xl p-12 text-center hover:border-[#6366f1]/50 transition-colors cursor-pointer">
+                    <div className="border-2 border-dashed border-[#2a2a3a] rounded-xl p-12 text-center hover:border-[#6366f1]/50 transition-colors">
                       <Upload className="h-12 w-12 text-[#6366f1] mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-[#e8e8f0] mb-2">
                         Upload Your Resume
@@ -137,29 +196,91 @@ export function ResumeScannerContent() {
                       <p className="text-sm text-[#9ca3af] mb-4">
                         PDF, DOC, or DOCX (Max 5MB)
                       </p>
-                      <Button
-                        onClick={handleFileUpload}
-                        className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30"
-                      >
-                        Choose File
-                      </Button>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id="resume-scanner-upload"
+                      />
+                      <label htmlFor="resume-scanner-upload">
+                        <Button
+                          asChild
+                          className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30 cursor-pointer"
+                        >
+                          <span>Choose File</span>
+                        </Button>
+                      </label>
+                    </div>
+                  </div>
+                ) : !analyzing && !analysisComplete ? (
+                  <div className="space-y-6">
+                    <div className="border-2 border-dashed border-[#6366f1]/50 rounded-xl p-8 text-center bg-[#1e1e2e]">
+                      <FileText className="h-12 w-12 text-[#6366f1] mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-[#e8e8f0] mb-2">
+                        {file?.name}
+                      </h3>
+                      <p className="text-sm text-[#9ca3af] mb-6">
+                        {(file ? file.size / 1024 : 0).toFixed(2)} KB
+                      </p>
+                      {error && (
+                        <div className="mb-4 p-3 bg-[#ef4444]/20 border border-[#ef4444]/30 rounded-lg">
+                          <p className="text-sm text-[#ef4444]">{error}</p>
+                        </div>
+                      )}
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Button
+                          onClick={() => {
+                            setFile(null);
+                            setFileUploaded(false);
+                            setError("");
+                          }}
+                          variant="outline"
+                          className="border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                        >
+                          Remove File
+                        </Button>
+                        <Button
+                          onClick={handleAnalyze}
+                          disabled={analyzing}
+                          className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30"
+                        >
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Analyze Resume
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : analyzing ? (
-                  <div className="text-center py-12">
+                  <div className="text-center py-12 space-y-6">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="w-16 h-16 border-4 border-[#6366f1] border-t-transparent rounded-full mx-auto mb-4"
+                      className="w-20 h-20 border-4 border-[#6366f1] border-t-transparent rounded-full mx-auto mb-6"
                     />
-                    <h3 className="text-xl font-semibold text-[#e8e8f0] mb-2">
-                      Analyzing Your Resume...
-                    </h3>
-                    <p className="text-sm text-[#9ca3af]">
-                      Our AI is scanning your resume for optimization opportunities
-                    </p>
+                    <div className="space-y-4">
+                      <h3 className="text-2xl font-semibold text-[#e8e8f0] mb-2">
+                        Analyzing Your Resume...
+                      </h3>
+                      <p className="text-base text-[#a5b4fc] mb-4">
+                        {currentStep || "Processing your resume..."}
+                      </p>
+                      <div className="w-full max-w-md mx-auto">
+                        <div className="w-full bg-[#2a2a3a] rounded-full h-3 mb-2">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${analysisProgress}%` }}
+                            transition={{ duration: 0.3 }}
+                            className="h-3 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] rounded-full"
+                          />
+                        </div>
+                        <p className="text-sm text-[#9ca3af]">
+                          {analysisProgress}% Complete
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                ) : analysisComplete ? (
+                ) : analysisComplete && analysisData ? (
                   <div className="space-y-6">
                     <div className="text-center">
                       <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#6366f1]/30">
@@ -169,15 +290,34 @@ export function ResumeScannerContent() {
                         Analysis Complete
                       </h3>
                       <div className="flex items-center justify-center gap-2 mb-4">
-                        <span className="text-4xl font-bold bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] bg-clip-text text-transparent">86%</span>
+                        <span className="text-4xl font-bold bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] bg-clip-text text-transparent">
+                          {analysisData.overallScore}%
+                        </span>
                         <span className="text-lg text-[#9ca3af]">Overall Score</span>
                       </div>
                     </div>
 
+                    {analysisData.strengths && analysisData.strengths.length > 0 && (
+                      <div className="p-4 rounded-lg bg-[#10b981]/10 border border-[#10b981]/30">
+                        <h4 className="font-semibold text-[#10b981] mb-2 flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Strengths
+                        </h4>
+                        <ul className="space-y-1">
+                          {analysisData.strengths.map((strength: string, idx: number) => (
+                            <li key={idx} className="text-sm text-[#9ca3af] flex items-start gap-2">
+                              <span className="text-[#10b981] mt-1">•</span>
+                              <span>{strength}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     <div className="space-y-4">
-                      {improvements.map((item, index) => (
+                      {analysisData.categories && Object.entries(analysisData.categories).map(([category, data]: [string, any], index) => (
                         <motion.div
-                          key={item.category}
+                          key={category}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
@@ -185,34 +325,58 @@ export function ResumeScannerContent() {
                         >
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold text-[#e8e8f0]">
-                                {item.category}
+                              <span className="font-semibold text-[#e8e8f0] capitalize">
+                                {category}
                               </span>
                               <span className="text-sm font-bold bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] bg-clip-text text-transparent">
-                                {item.score}%
+                                {data.score}%
                               </span>
                             </div>
                             <div className="w-full bg-[#2a2a3a] rounded-full h-2">
                               <motion.div
                                 initial={{ width: 0 }}
-                                animate={{ width: `${item.score}%` }}
+                                animate={{ width: `${data.score}%` }}
                                 transition={{ duration: 1, delay: index * 0.1 }}
                                 className="h-2 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] rounded-full"
                               />
                             </div>
-                            <p className="text-sm text-[#9ca3af] mt-2">
-                              {item.suggestion}
-                            </p>
+                            {data.suggestions && data.suggestions.length > 0 && (
+                              <p className="text-sm text-[#9ca3af] mt-2">
+                                {data.suggestions[0]}
+                              </p>
+                            )}
                           </div>
                         </motion.div>
                       ))}
                     </div>
 
+                    {analysisData.suggestions && analysisData.suggestions.length > 0 && (
+                      <div className="p-4 rounded-lg bg-[#f59e0b]/10 border border-[#f59e0b]/30">
+                        <h4 className="font-semibold text-[#f59e0b] mb-2 flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4" />
+                          Recommendations
+                        </h4>
+                        <ul className="space-y-2">
+                          {analysisData.suggestions.slice(0, 5).map((suggestion: string, idx: number) => (
+                            <li key={idx} className="text-sm text-[#9ca3af] flex items-start gap-2">
+                              <span className="text-[#f59e0b] mt-1">•</span>
+                              <span>{suggestion}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
                       <Button
                         onClick={() => {
+                          setFile(null);
                           setFileUploaded(false);
                           setAnalysisComplete(false);
+                          setAnalysisProgress(0);
+                          setCurrentStep("");
+                          setAnalysisData(null);
+                          setError("");
                         }}
                         variant="outline"
                         className="flex-1 border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
@@ -225,6 +389,31 @@ export function ResumeScannerContent() {
                         Download Report
                       </Button>
                     </div>
+                  </div>
+                ) : analysisComplete && !analysisData ? (
+                  <div className="text-center py-12">
+                    <AlertCircle className="h-12 w-12 text-[#ef4444] mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-[#e8e8f0] mb-2">
+                      Analysis Failed
+                    </h3>
+                    <p className="text-sm text-[#9ca3af] mb-4">
+                      {error || "Unable to analyze resume. Please try again."}
+                    </p>
+                    <Button
+                      onClick={() => {
+                        setFile(null);
+                        setFileUploaded(false);
+                        setAnalysisComplete(false);
+                        setAnalysisProgress(0);
+                        setCurrentStep("");
+                        setAnalysisData(null);
+                        setError("");
+                      }}
+                      variant="outline"
+                      className="border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                    >
+                      Try Again
+                    </Button>
                   </div>
                 ) : null}
               </CardContent>

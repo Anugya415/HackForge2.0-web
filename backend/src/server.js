@@ -11,6 +11,9 @@ import jobRoutes from './routes/job.routes.js';
 import applicationRoutes from './routes/application.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import resumeRoutes from './routes/resume.routes.js';
+import resumeAnalysisRoutes from './routes/resumeAnalysis.routes.js';
+import path from 'path';
 
 dotenv.config();
 
@@ -23,6 +26,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.get('/health', (req, res) => {
   res.json({ 
@@ -39,6 +43,8 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/resumes', resumeRoutes);
+app.use('/api/resume-analysis', resumeAnalysisRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });

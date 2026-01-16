@@ -2,6 +2,7 @@ import express from 'express';
 import { getPool } from '../config/database.js';
 import { authenticate, requireAdmin, requireCompany } from '../middleware/auth.middleware.js';
 import { validateJob } from '../utils/validation.js';
+import { getJobSuggestions } from '../controllers/jobSuggestions.controller.js';
 
 const router = express.Router();
 
@@ -47,6 +48,8 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch jobs' });
   }
 });
+
+router.get('/suggestions', authenticate, getJobSuggestions);
 
 router.get('/:id', async (req, res) => {
   try {

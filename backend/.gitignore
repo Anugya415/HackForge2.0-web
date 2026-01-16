@@ -44,6 +44,9 @@ out/
 *.sqlite3
 *.db
 
+# Uploads
+uploads/
+
 # Testing
 coverage/
 .nyc_output/

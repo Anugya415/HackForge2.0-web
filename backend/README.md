@@ -45,6 +45,8 @@ JWT_SECRET=your-secret-key-change-in-production
 JWT_EXPIRES_IN=7d
 
 BCRYPT_SALT_ROUNDS=10
+
+GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
 3. Initialize database:
@@ -127,3 +129,4 @@ The database includes the following tables:
 - `JWT_SECRET` - JWT secret key
 - `JWT_EXPIRES_IN` - JWT expiration time
 - `BCRYPT_SALT_ROUNDS` - Bcrypt salt rounds
+- `GEMINI_API_KEY` - Google Gemini API key for AI resume parsing (optional, falls back to regex parsing if not provided)

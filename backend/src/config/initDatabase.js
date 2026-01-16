@@ -127,6 +127,13 @@ CREATE TABLE IF NOT EXISTS resumes (
   file_size INT,
   version INT DEFAULT 1,
   is_active BOOLEAN DEFAULT TRUE,
+  parsed_data JSON,
+  name VARCHAR(255),
+  email VARCHAR(255),
+  phone VARCHAR(50),
+  skills TEXT,
+  experience TEXT,
+  education TEXT,
   uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_user (user_id),
@@ -244,6 +251,27 @@ CREATE TABLE IF NOT EXISTS analytics (
             `ALTER TABLE users ADD COLUMN ${column.name} ${column.type}`
           );
           console.log(`Added column '${column.name}' to users table`);
+        }
+      } catch (error) {
+        if (error.code !== 'ER_DUP_FIELDNAME') {
+          console.error(`Error adding column '${column.name}':`, error.message);
+        }
+      }
+    }
+
+    for (const column of resumeColumnsToAdd) {
+      try {
+        const [columns] = await connection.query(
+          `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+           WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'resumes' AND COLUMN_NAME = ?`,
+          [dbName, column.name]
+        );
+        
+        if (columns.length === 0) {
+          await connection.query(
+            `ALTER TABLE resumes ADD COLUMN ${column.name} ${column.type}`
+          );
+          console.log(`Added column '${column.name}' to resumes table`);
         }
       } catch (error) {
         if (error.code !== 'ER_DUP_FIELDNAME') {

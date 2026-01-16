@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -207,16 +207,65 @@ export function ResumeContent() {
                 <Upload className="h-12 w-12 text-[#6366f1] mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-semibold text-[#e8e8f0] mb-2">Upload your resume</h3>
                 <p className="text-sm text-[#9ca3af] mb-6">
-                  PDF, DOC, or DOCX (Max 5MB)
+                  PDF, DOC, or DOCX (Max 5MB) - AI will automatically extract your information
                 </p>
-                <Button
-                  onClick={handleUpload}
+                {error && (
+                  <p className="text-sm text-[#ef4444] mb-4">{error}</p>
+                )}
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleUpload}
                   disabled={isUploading}
-                  className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0"
-                >
-                  {isUploading ? "Uploading..." : "Choose File"}
-                </Button>
+                  className="hidden"
+                  id="resume-upload"
+                />
+                <label htmlFor="resume-upload">
+                  <Button
+                    asChild
+                    disabled={isUploading}
+                    className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 cursor-pointer"
+                  >
+                    <span>{isUploading ? "Uploading & Parsing..." : "Choose File"}</span>
+                  </Button>
+                </label>
               </div>
+              {resumes.length > 0 && (
+                <div className="mt-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-[#e8e8f0]">Your Resumes</h3>
+                  {resumes.map((resume) => (
+                    <Card key={resume.id} className="border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-sm">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-[#e8e8f0] font-medium">{resume.file_name}</p>
+                          <p className="text-sm text-[#9ca3af]">
+                            {new Date(resume.uploaded_at).toLocaleDateString()} • 
+                            {(resume.file_size / 1024).toFixed(2)} KB
+                            {resume.is_active && (
+                              <span className="ml-2 px-2 py-0.5 bg-[#10b981]/20 text-[#10b981] rounded text-xs">
+                                Active
+                              </span>
+                            )}
+                          </p>
+                          {resume.parsed_data && (
+                            <p className="text-xs text-[#6366f1] mt-1">
+                              ✓ Parsed with AI
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(resume.id)}
+                          className="border-[#ef4444] text-[#ef4444] hover:bg-[#ef4444]/10"
+                        >
+                          Delete
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
