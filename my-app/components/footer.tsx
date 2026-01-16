@@ -39,6 +39,7 @@ export function Footer() {
   return (
     <footer className="relative bg-white dark:bg-slate-950">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-8 sm:gap-12 mb-8 sm:mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -129,6 +130,7 @@ export function Footer() {
             </Link>
           </div>
         </motion.div>
+        </div>
       </div>
     </footer>
   );

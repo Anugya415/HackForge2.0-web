@@ -39,7 +39,7 @@ export function HowItWorks() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="relative py-12 sm:py-16 md:py-20 lg:py-32 bg-white dark:bg-slate-950 overflow-hidden">
+    <section ref={ref} className="relative bg-white dark:bg-slate-950 overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
           <motion.div
@@ -67,13 +67,14 @@ export function HowItWorks() {
         ))}
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12 sm:mb-16 space-y-3 sm:space-y-4"
-        >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-32 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12 sm:mb-16 space-y-3 sm:space-y-4"
+          >
           <Badge variant="secondary" className="mb-3 sm:mb-4 px-3 sm:px-4 py-1.5 bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm border-0 text-slate-700 dark:text-slate-300">
             Simple Process
           </Badge>
@@ -85,10 +86,10 @@ export function HowItWorks() {
           <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto px-4">
             Get started in four easy steps and land your next opportunity faster than ever before
           </p>
-        </motion.div>
-        
-        <div className="relative">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
+          </motion.div>
+          
+          <div className="relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
             {steps.map((step, index) => {
               const Icon = step.icon;
               const isEven = index % 2 === 0;
@@ -159,6 +160,7 @@ export function HowItWorks() {
                 </motion.div>
               );
             })}
+            </div>
           </div>
         </div>
       </div>

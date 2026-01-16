@@ -65,7 +65,7 @@ export function Testimonials() {
   const duplicatedTestimonials = [...testimonials, ...testimonials];
 
   return (
-    <section ref={ref} className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-32 bg-white dark:bg-slate-950 relative overflow-hidden">
+    <section ref={ref} className="relative bg-white dark:bg-slate-950 overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(7)].map((_, i) => (
           <motion.div
@@ -92,7 +92,9 @@ export function Testimonials() {
         ))}
       </div>
 
-      <motion.div
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-32 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
         transition={{ duration: 0.6 }}
@@ -112,10 +114,10 @@ export function Testimonials() {
         <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto px-4">
           Join thousands of professionals who found their perfect match with GROEI
         </p>
-      </motion.div>
+          </motion.div>
 
-      <div 
-        className="overflow-hidden relative py-8"
+          <div 
+            className="overflow-hidden relative py-8"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -130,7 +132,7 @@ export function Testimonials() {
           {duplicatedTestimonials.map((testimonial, index) => (
             <motion.div
               key={`${testimonial.name}-${index}`}
-              className="flex-shrink-0 w-[90vw] sm:w-[450px] md:w-[480px] lg:w-[420px]"
+              className="flex-shrink-0 w-[85vw] sm:w-[400px] md:w-[450px] lg:w-[420px]"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.5, delay: (index % testimonials.length) * 0.1 }}
@@ -224,6 +226,8 @@ export function Testimonials() {
               </Card>
             </motion.div>
           ))}
+          </div>
+        </div>
         </div>
       </div>
     </section>

@@ -375,7 +375,7 @@ export function FindJobsContent() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:gap-8">
           {filteredJobs.map((job, index) => (
             <motion.div
               key={job.id}

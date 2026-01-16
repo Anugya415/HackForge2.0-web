@@ -101,28 +101,29 @@ export function Hero() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-32 relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center lg:min-h-[600px]">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="space-y-6 sm:space-y-8"
+              className="space-y-6 sm:space-y-8 flex flex-col justify-center"
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/60 dark:bg-slate-950/60 backdrop-blur-sm border-0"
+                className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#041F2B]/10 to-[#0d4a63]/10 dark:from-[#041F2B]/20 dark:to-[#0d4a63]/20 backdrop-blur-md border border-[#041F2B]/20 dark:border-[#041F2B]/30 shadow-sm"
               >
                 <motion.div
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="relative"
                 >
-                  <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-600 dark:text-slate-400" />
+                  <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#041F2B] dark:text-[#0d4a63]" />
                 </motion.div>
-                <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
-                  AI-Powered Matching
+                <span className="text-xs font-semibold text-[#041F2B] dark:text-[#0d4a63] tracking-tight whitespace-nowrap">
+                  AI-Powered Matchmaking
                 </span>
               </motion.div>
 
@@ -220,9 +221,9 @@ export function Hero() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="relative hidden lg:block"
+              className="relative hidden lg:flex items-center justify-center h-full"
             >
-              <div className="relative">
+              <div className="relative w-full max-w-md">
                 <motion.div
                   className="absolute inset-0 bg-slate-200 dark:bg-slate-800 rounded-3xl -rotate-6"
                   animate={{
@@ -247,7 +248,7 @@ export function Hero() {
                   }}
                 />
                 <motion.div
-                  className="relative bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm rounded-3xl border-0 p-12 shadow-2xl"
+                  className="relative bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm rounded-3xl border-0 p-8 sm:p-10 lg:p-12 shadow-2xl"
                   whileHover={{ scale: 1.02 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >

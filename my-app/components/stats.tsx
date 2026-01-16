@@ -91,7 +91,7 @@ export function Stats() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-32 relative z-20 bg-white dark:bg-slate-950 overflow-hidden">
+    <section ref={ref} className="relative z-20 bg-white dark:bg-slate-950 overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(5)].map((_, i) => (
           <motion.div
@@ -117,8 +117,10 @@ export function Stats() {
           />
         ))}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-        {stats.map((stat, index) => {
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-32 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          {stats.map((stat, index) => {
           const Icon = stat.icon;
           const position = index % 2 === 0 ? "top" : "bottom";
           
@@ -231,6 +233,8 @@ export function Stats() {
             </motion.div>
           );
         })}
+          </div>
+        </div>
       </div>
     </section>
   );
