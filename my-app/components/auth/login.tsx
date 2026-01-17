@@ -84,6 +84,13 @@ export function LoginContent() {
           setIsLoading(false);
           router.push(redirect || "/admin");
         } else {
+          if (response.user.name) {
+            localStorage.setItem("userName", response.user.name);
+          }
+          if (response.user.email) {
+            localStorage.setItem("userEmail", response.user.email);
+          }
+
           const urlParams = new URLSearchParams(window.location.search);
           const redirect = urlParams.get("redirect");
           setIsLoading(false);

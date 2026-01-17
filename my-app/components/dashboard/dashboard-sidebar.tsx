@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authAPI } from "@/lib/api";
@@ -23,11 +23,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const mockUser = {
-  name: "Alex Johnson",
-  email: "alex.johnson@example.com",
-  avatar: "AJ",
-};
+
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -44,7 +40,63 @@ const navItems = [
 
 export function DashboardSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState({
+    name: "User",
+    email: "",
+    avatar: "U",
+  });
   const pathname = usePathname();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (typeof window !== "undefined") {
+        // Initial load from localStorage
+        const storedName = localStorage.getItem("userName") || "User";
+        const storedEmail = localStorage.getItem("userEmail") || "";
+        let initials = storedName
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2);
+
+        setUserInfo({
+          name: storedName,
+          email: storedEmail,
+          avatar: initials,
+        });
+
+        // Fetch fresh data from API
+        try {
+          const response = await authAPI.getProfile();
+          if (response && response.user) {
+            const { name, email } = response.user;
+
+            initials = name
+              .split(" ")
+              .map((n: string) => n[0])
+              .join("")
+              .toUpperCase()
+              .slice(0, 2);
+
+            setUserInfo({
+              name,
+              email,
+              avatar: initials,
+            });
+
+            // Update localStorage
+            localStorage.setItem("userName", name);
+            localStorage.setItem("userEmail", email);
+          }
+        } catch (error) {
+          console.error("Failed to fetch user profile:", error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   return (
     <>
@@ -80,11 +132,10 @@ export function DashboardSidebar() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-[#6366f1]/30">
-                    {mockUser.avatar}
+                    {userInfo.avatar}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#e8e8f0]">{mockUser.name}</p>
-                    <p className="text-xs text-[#9ca3af]">{mockUser.email}</p>
+                    <p className="text-sm font-semibold text-[#e8e8f0]">{userInfo.name}</p>
                   </div>
                 </div>
                 <Button
@@ -156,11 +207,10 @@ export function DashboardSidebar() {
           </Link>
           <div className="flex items-center gap-3 p-3 rounded-lg bg-[#1e1e2e] border border-[#2a2a3a]">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-[#6366f1]/30">
-              {mockUser.avatar}
+              {userInfo.avatar}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#e8e8f0] truncate">{mockUser.name}</p>
-              <p className="text-xs text-[#9ca3af] truncate">{mockUser.email}</p>
+              <p className="text-sm font-semibold text-[#e8e8f0] truncate">{userInfo.name}</p>
             </div>
           </div>
         </div>
@@ -200,6 +250,8 @@ export function DashboardSidebar() {
             variant="ghost"
             onClick={() => {
               authAPI.logout();
+              localStorage.removeItem("userName");
+              localStorage.removeItem("userEmail");
               window.location.href = "/login";
             }}
             className="w-full justify-start text-[#9ca3af] hover:text-[#ef4444] hover:bg-[#ef4444]/10"

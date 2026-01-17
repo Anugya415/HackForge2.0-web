@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
   try {
     const pool = getPool();
     const { search, location, type, company_id, status = 'active' } = req.query;
-    
+
     let query = `
       SELECT j.*, c.name as company_name, c.logo as company_logo
       FROM jobs j
@@ -18,29 +18,29 @@ router.get('/', async (req, res) => {
       WHERE j.status = ?
     `;
     const params = [status];
-    
+
     if (search) {
       query += ' AND (j.title LIKE ? OR j.description LIKE ?)';
       params.push(`%${search}%`, `%${search}%`);
     }
-    
+
     if (location) {
       query += ' AND j.location LIKE ?';
       params.push(`%${location}%`);
     }
-    
+
     if (type) {
       query += ' AND j.type = ?';
       params.push(type);
     }
-    
+
     if (company_id) {
       query += ' AND j.company_id = ?';
       params.push(company_id);
     }
-    
+
     query += ' ORDER BY j.created_at DESC';
-    
+
     const [jobs] = await pool.query(query, params);
     res.json({ jobs });
   } catch (error) {
@@ -54,20 +54,56 @@ router.get('/suggestions', authenticate, getJobSuggestions);
 router.get('/:id', async (req, res) => {
   try {
     const pool = getPool();
+    const jobId = req.params.id;
+
+    // Determine user ID if authenticated (optional authentication)
+    let userId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const jwt = (await import('jsonwebtoken')).default;
+        const jwtSecret = process.env.JWT_SECRET || 'hackforge-default-secret-change-in-production';
+        const decoded = jwt.verify(token, jwtSecret);
+        userId = decoded.userId;
+      } catch (err) {
+        // Ignore token errors for this route
+      }
+    }
+
     const [jobs] = await pool.query(
       `SELECT j.*, c.name as company_name, c.logo as company_logo, 
               c.description as company_description, c.location as company_location
        FROM jobs j
        JOIN companies c ON j.company_id = c.id
        WHERE j.id = ?`,
-      [req.params.id]
+      [jobId]
     );
-    
+
     if (jobs.length === 0) {
       return res.status(404).json({ error: 'Job not found' });
     }
-    
-    res.json({ job: jobs[0] });
+
+    const job = jobs[0];
+
+    if (userId) {
+      const [saved] = await pool.query(
+        'SELECT id FROM saved_jobs WHERE user_id = ? AND job_id = ?',
+        [userId, jobId]
+      );
+      job.is_saved = saved.length > 0;
+
+      const [applied] = await pool.query(
+        'SELECT id FROM applications WHERE user_id = ? AND job_id = ?',
+        [userId, jobId]
+      );
+      job.is_applied = applied.length > 0;
+    } else {
+      job.is_saved = false;
+      job.is_applied = false;
+    }
+
+    res.json({ job });
   } catch (error) {
     console.error('Get job error:', error);
     res.status(500).json({ error: 'Failed to fetch job' });
@@ -78,24 +114,24 @@ router.post('/', authenticate, requireAdmin, requireCompany, validateJob, async 
   try {
     const pool = getPool();
     const { title, description, location, salary_min, salary_max, type, experience_level, skills_required } = req.body;
-    
+
     if (!req.user.company_id) {
       return res.status(400).json({ error: 'Company association required. Please contact support.' });
     }
-    
+
     const salaryMin = salary_min ? parseFloat(salary_min) : null;
     const salaryMax = salary_max ? parseFloat(salary_max) : null;
-    
+
     if (salaryMin && salaryMax && salaryMin > salaryMax) {
       return res.status(400).json({ error: 'Minimum salary cannot be greater than maximum salary' });
     }
-    
+
     const [result] = await pool.query(
       `INSERT INTO jobs (company_id, title, description, location, salary_min, salary_max, type, experience_level, skills_required, posted_by, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
       [req.user.company_id, title, description, location, salaryMin, salaryMax, type, experience_level || null, skills_required || null, req.user.id]
     );
-    
+
     const [jobs] = await pool.query(
       `SELECT j.*, c.name as company_name, c.logo as company_logo
        FROM jobs j 
@@ -103,19 +139,19 @@ router.post('/', authenticate, requireAdmin, requireCompany, validateJob, async 
        WHERE j.id = ?`,
       [result.insertId]
     );
-    
+
     if (jobs.length === 0) {
       return res.status(500).json({ error: 'Failed to retrieve created job' });
     }
-    
+
     res.status(201).json({ job: jobs[0], message: 'Job posted successfully' });
   } catch (error) {
     console.error('Create job error:', error);
-    
+
     if (error.code === 'ER_NO_REFERENCED_ROW_2') {
       return res.status(400).json({ error: 'Invalid company association' });
     }
-    
+
     res.status(500).json({ error: error.message || 'Failed to create job' });
   }
 });
@@ -131,6 +167,63 @@ router.get('/company/my', authenticate, requireAdmin, requireCompany, async (req
   } catch (error) {
     console.error('Get company jobs error:', error);
     res.status(500).json({ error: 'Failed to fetch jobs' });
+  }
+});
+
+router.post('/:id/save', authenticate, async (req, res) => {
+  try {
+    const pool = getPool();
+    const jobId = req.params.id;
+    const userId = req.user.id;
+
+    await pool.query(
+      'INSERT IGNORE INTO saved_jobs (user_id, job_id) VALUES (?, ?)',
+      [userId, jobId]
+    );
+
+    res.json({ message: 'Job saved successfully' });
+  } catch (error) {
+    console.error('Save job error:', error);
+    res.status(500).json({ error: 'Failed to save job' });
+  }
+});
+
+router.delete('/:id/unsave', authenticate, async (req, res) => {
+  try {
+    const pool = getPool();
+    const jobId = req.params.id;
+    const userId = req.user.id;
+
+    await pool.query(
+      'DELETE FROM saved_jobs WHERE user_id = ? AND job_id = ?',
+      [userId, jobId]
+    );
+
+    res.json({ message: 'Job removed from saved' });
+  } catch (error) {
+    console.error('Unsave job error:', error);
+    res.status(500).json({ error: 'Failed to unsave job' });
+  }
+});
+
+router.get('/saved/my', authenticate, async (req, res) => {
+  try {
+    const pool = getPool();
+    const userId = req.user.id;
+
+    const [savedJobs] = await pool.query(`
+      SELECT j.*, c.name as company_name, c.logo as company_logo
+      FROM jobs j
+      JOIN saved_jobs sj ON j.id = sj.job_id
+      JOIN companies c ON j.company_id = c.id
+      WHERE sj.user_id = ?
+      ORDER BY sj.saved_at DESC
+    `, [userId]);
+
+    res.json({ jobs: savedJobs });
+  } catch (error) {
+    console.error('Get saved jobs error:', error);
+    res.status(500).json({ error: 'Failed to fetch saved jobs' });
   }
 });
 

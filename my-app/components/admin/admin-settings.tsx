@@ -166,11 +166,10 @@ export function AdminSettingsContent() {
                         <button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                            activeTab === tab.id
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === tab.id
                               ? "bg-gradient-to-r from-[#6366f1]/20 to-[#8b5cf6]/20 text-[#a5b4fc] border border-[#6366f1]/30"
                               : "text-[#9ca3af] hover:text-[#e8e8f0] hover:bg-[#1e1e2e]"
-                          }`}
+                            }`}
                         >
                           <Icon className="h-5 w-5" />
                           <span className="font-medium">{tab.label}</span>
@@ -467,21 +466,7 @@ export function AdminSettingsContent() {
                         </Button>
                       </div>
 
-                      <div className="pt-6 border-t border-[#2a2a3a]">
-                        <div className="flex items-start gap-3 p-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/30">
-                          <AlertTriangle className="h-5 w-5 text-[#ef4444] mt-0.5" />
-                          <div>
-                            <p className="font-medium text-[#e8e8f0] mb-1">Two-Factor Authentication</p>
-                            <p className="text-sm text-[#9ca3af] mb-3">Add an extra layer of security to your admin account</p>
-                            <Button
-                              variant="outline"
-                              className="border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e]"
-                            >
-                              Enable 2FA
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+
                     </CardContent>
                   </Card>
                 </motion.div>

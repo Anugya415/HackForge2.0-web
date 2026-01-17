@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { jobsAPI } from "@/lib/api";
+import { jobsAPI, applicationsAPI } from "@/lib/api";
 import { Combobox } from "@/components/ui/combobox";
 
 export default function JobDetailsPage() {
@@ -30,23 +30,22 @@ export default function JobDetailsPage() {
   const [job, setJob] = useState<any>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const userRole = localStorage.getItem("userRole");
       const isAdminLoggedIn = localStorage.getItem("isAdminLoggedIn") === "true";
-      
+
       if (userRole === "admin" || isAdminLoggedIn) {
         router.push("/admin/applications");
         return;
       }
-      
+
       const loggedIn = localStorage.getItem("isLoggedIn") === "true";
       setIsLoggedIn(loggedIn);
-      
-      const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs") || "[]");
-      setIsApplied(appliedJobs.includes(jobId));
     }
     loadJob();
   }, [jobId, router]);
@@ -62,11 +61,11 @@ export default function JobDetailsPage() {
           company: response.job.company_name || "",
           location: response.job.location || "",
           type: response.job.type || "Full-time",
-          salary: response.job.salary_min && response.job.salary_max 
+          salary: response.job.salary_min && response.job.salary_max
             ? `₹${(response.job.salary_min / 100000).toFixed(1)}L - ₹${(response.job.salary_max / 100000).toFixed(1)}L`
-            : response.job.salary_min 
-            ? `₹${(response.job.salary_min / 100000).toFixed(1)}L+`
-            : "Not specified",
+            : response.job.salary_min
+              ? `₹${(response.job.salary_min / 100000).toFixed(1)}L+`
+              : "Not specified",
           posted: response.job.created_at ? getTimeAgo(new Date(response.job.created_at)) : "",
           match: 0,
           skills: response.job.skills_required ? (typeof response.job.skills_required === 'string' ? response.job.skills_required.split(',') : response.job.skills_required) : [],
@@ -77,6 +76,8 @@ export default function JobDetailsPage() {
           companyInfo: "",
         };
         setJob(formattedJob);
+        setIsApplied(response.job.is_applied || false);
+        setIsSaved(response.job.is_saved || false);
       }
     } catch (error) {
       console.error("Failed to load job:", error);
@@ -96,34 +97,69 @@ export default function JobDetailsPage() {
     return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!isLoggedIn) {
       router.push("/login?redirect=/jobs/" + jobId);
       return;
     }
 
-    if (!isApplied) {
-      const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs") || "[]");
-      appliedJobs.push(jobId);
-      localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
-      setIsApplied(true);
+    if (isApplied) return;
 
-      const appliedJob = {
-        id: Date.now(),
-        jobTitle: job.title,
-        company: job.company,
-        status: "Application Sent",
-        match: job.match,
-        date: new Date().toISOString().split('T')[0],
-        location: job.location,
-        salary: job.salary,
-        type: job.type,
-        appliedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      };
-      
-      const existingApplications = JSON.parse(localStorage.getItem("userApplications") || "[]");
-      existingApplications.push(appliedJob);
-      localStorage.setItem("userApplications", JSON.stringify(existingApplications));
+    try {
+      setIsSubmitting(true);
+      const response = await applicationsAPI.create({
+        job_id: jobId,
+        cover_letter: "", // Optional: could add a field for this
+        resume_url: ""    // Optional: could add a field for this
+      });
+
+      if (response.application) {
+        setIsApplied(true);
+        // Also update local storage as a fallback/cache if needed
+        const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs") || "[]");
+        if (!appliedJobs.includes(jobId)) {
+          appliedJobs.push(jobId);
+          localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
+        }
+        alert("Application submitted successfully!");
+      }
+    } catch (error: any) {
+      console.error("Failed to apply:", error);
+      const errorMessage = error.response?.data?.error || error.message || "Failed to submit application";
+
+      if (errorMessage === "Application already submitted") {
+        setIsApplied(true);
+        alert("You have already applied for this job!");
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/jobs/" + jobId);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      if (isSaved) {
+        await jobsAPI.unsave(jobId);
+        setIsSaved(false);
+        alert("Job removed from saved");
+      } else {
+        await jobsAPI.save(jobId);
+        setIsSaved(true);
+        alert("Job saved successfully");
+      }
+    } catch (error: any) {
+      console.error("Failed to save/unsave job:", error);
+      alert(error.response?.data?.error || "Failed to update saved job");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -273,11 +309,7 @@ export default function JobDetailsPage() {
                       if (value === "apply") {
                         handleApply();
                       } else if (value === "save") {
-                        const savedJobs = JSON.parse(localStorage.getItem("savedJobs") || "[]");
-                        if (!savedJobs.includes(jobId)) {
-                          savedJobs.push(jobId);
-                          localStorage.setItem("savedJobs", JSON.stringify(savedJobs));
-                        }
+                        handleSave();
                       }
                     }}
                   />
@@ -293,17 +325,20 @@ export default function JobDetailsPage() {
                 ) : (
                   <Button
                     onClick={handleApply}
+                    disabled={isSubmitting}
                     className="w-full bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0"
                   >
-                    Apply Now
+                    {isSubmitting ? "Submitting..." : "Apply Now"}
                   </Button>
                 )}
                 <Button
                   variant="outline"
-                  className="w-full border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e]"
+                  onClick={handleSave}
+                  disabled={isSubmitting}
+                  className={`w-full border-2 ${isSaved ? 'border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]' : 'border-[#2a2a3a] text-[#e8e8f0]'} hover:bg-[#1e1e2e]`}
                 >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Save Job
+                  <Star className={`h-4 w-4 mr-2 ${isSaved ? 'fill-[#6366f1]' : ''}`} />
+                  {isSaved ? "Saved" : "Save Job"}
                 </Button>
               </CardContent>
             </Card>

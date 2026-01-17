@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Search,
   Building2,
@@ -164,6 +165,8 @@ export function AdminCompaniesContent() {
   const [company, setCompany] = useState<any>(null);
   const [recruiterCompany, setRecruiterCompany] = useState("TechCorp");
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<any>({});
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -212,6 +215,38 @@ export function AdminCompaniesContent() {
       await loadCompany();
     } catch (error) {
       console.error("Failed to update company:", error);
+    }
+  };
+
+  const startEditing = () => {
+    setEditForm({
+      ...company,
+      description: company.description || "",
+      employees: company.employees || "",
+      website: company.website || "",
+      founded: company.founded || "",
+      phone: company.phone || "",
+      email: company.email || "",
+      location: company.location || "",
+      industry: company.industry || "",
+      size: company.size || "",
+    });
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
+      await companiesAPI.updateMyCompany({
+        ...editForm,
+        id: company.id
+      });
+      await loadCompany();
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save company:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -351,11 +386,10 @@ export function AdminCompaniesContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => toggleFeatured(company.id)}
-                            className={`${
-                              company.featured
-                                ? "border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]"
-                                : "border-[#2a2a3a] text-[#9ca3af]"
-                            }`}
+                            className={`${company.featured
+                              ? "border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]"
+                              : "border-[#2a2a3a] text-[#9ca3af]"
+                              }`}
                           >
                             <Star className="h-4 w-4" />
                           </Button>
@@ -363,11 +397,10 @@ export function AdminCompaniesContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => toggleVerified(company.id)}
-                            className={`${
-                              company.verified
-                                ? "border-[#10b981] bg-[#10b981]/10 text-[#10b981]"
-                                : "border-[#2a2a3a] text-[#9ca3af]"
-                            }`}
+                            className={`${company.verified
+                              ? "border-[#10b981] bg-[#10b981]/10 text-[#10b981]"
+                              : "border-[#2a2a3a] text-[#9ca3af]"
+                              }`}
                           >
                             <CheckCircle2 className="h-4 w-4" />
                           </Button>
@@ -385,7 +418,7 @@ export function AdminCompaniesContent() {
               <CardContent className="p-12 text-center">
                 <Building2 className="h-16 w-16 text-[#6366f1] mx-auto mb-4 opacity-50" />
                 <h3 className="text-xl font-semibold text-[#e8e8f0] mb-2">
-                  {recruiterCompany 
+                  {recruiterCompany
                     ? `Company profile not found for ${recruiterCompany}`
                     : "No company information available"}
                 </h3>
@@ -428,7 +461,10 @@ export function AdminCompaniesContent() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setSelectedCompany(null)}
+                      onClick={() => {
+                        setSelectedCompany(null);
+                        setIsEditing(false);
+                      }}
                       className="text-[#9ca3af] hover:text-[#e8e8f0] hover:bg-[#1e1e2e]"
                     >
                       <X className="h-5 w-5" />
@@ -436,135 +472,268 @@ export function AdminCompaniesContent() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
-                  <div className="flex items-start gap-6">
-                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center text-white text-2xl font-bold shadow-xl shadow-[#6366f1]/30">
-                      {selectedCompanyData.logo}
+                  {isEditing ? (
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#e8e8f0]">Company Name</label>
+                            <Input
+                              value={editForm.name}
+                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                              className="bg-[#1e1e2e] border-[#2a2a3a]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#e8e8f0]">Industry</label>
+                            <Input
+                              value={editForm.industry}
+                              onChange={(e) => setEditForm({ ...editForm, industry: e.target.value })}
+                              className="bg-[#1e1e2e] border-[#2a2a3a]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#e8e8f0]">Location</label>
+                            <Input
+                              value={editForm.location}
+                              onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                              className="bg-[#1e1e2e] border-[#2a2a3a]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#e8e8f0]">Founded Year</label>
+                            <Input
+                              value={editForm.founded}
+                              onChange={(e) => setEditForm({ ...editForm, founded: e.target.value })}
+                              className="bg-[#1e1e2e] border-[#2a2a3a]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#e8e8f0]">Size</label>
+                            <Input
+                              value={editForm.size}
+                              onChange={(e) => setEditForm({ ...editForm, size: e.target.value })}
+                              className="bg-[#1e1e2e] border-[#2a2a3a]"
+                              placeholder="e.g. Medium (201-1000)"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#e8e8f0]">Employees Count</label>
+                            <Input
+                              value={editForm.employees}
+                              onChange={(e) => setEditForm({ ...editForm, employees: e.target.value })}
+                              className="bg-[#1e1e2e] border-[#2a2a3a]"
+                              placeholder="e.g. 500+"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#e8e8f0]">Phone</label>
+                            <Input
+                              value={editForm.phone}
+                              onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                              className="bg-[#1e1e2e] border-[#2a2a3a]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#e8e8f0]">Email</label>
+                            <Input
+                              value={editForm.email}
+                              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                              className="bg-[#1e1e2e] border-[#2a2a3a]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-[#e8e8f0]">Website</label>
+                          <Input
+                            value={editForm.website}
+                            onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+                            className="bg-[#1e1e2e] border-[#2a2a3a]"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-[#e8e8f0]">Description</label>
+                          <Textarea
+                            value={editForm.description}
+                            onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                            className="bg-[#1e1e2e] border-[#2a2a3a] min-h-[150px]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 justify-end pt-4 border-t border-[#2a2a3a]">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setIsEditing(false)}
+                          className="text-[#9ca3af] hover:text-[#e8e8f0]"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleSave}
+                          className="bg-[#6366f1] text-white hover:bg-[#4f46e5]"
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-2xl font-bold text-[#e8e8f0]">{selectedCompanyData.name}</h3>
-                        {selectedCompanyData.verified && (
-                          <Badge className="bg-[#10b981]/20 text-[#10b981] border-[#10b981]/30">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        )}
-                        {selectedCompanyData.featured && (
-                          <Badge className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white border-0">
-                            Featured
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Badge variant="secondary" className="bg-[#1e1e2e] text-[#9ca3af] border border-[#2a2a3a]">
-                          {selectedCompanyData.industry}
-                        </Badge>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-[#6366f1] text-[#6366f1]" />
-                          <span className="text-sm font-semibold text-[#e8e8f0]">{selectedCompanyData.rating}</span>
+                  ) : (
+                    <>
+                      <div className="flex items-start gap-6">
+                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center text-white text-2xl font-bold shadow-xl shadow-[#6366f1]/30">
+                          {selectedCompanyData.logo}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-2xl font-bold text-[#e8e8f0]">{selectedCompanyData.name}</h3>
+                            {selectedCompanyData.verified && (
+                              <Badge className="bg-[#10b981]/20 text-[#10b981] border-[#10b981]/30">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            {selectedCompanyData.featured && (
+                              <Badge className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white border-0">
+                                Featured
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Badge variant="secondary" className="bg-[#1e1e2e] text-[#9ca3af] border border-[#2a2a3a]">
+                              {selectedCompanyData.industry || "Industry not set"}
+                            </Badge>
+                            <div className="flex items-center gap-1">
+                              <Star className="h-4 w-4 fill-[#6366f1] text-[#6366f1]" />
+                              <span className="text-sm font-semibold text-[#e8e8f0]">{selectedCompanyData.rating || "0.0"}</span>
+                            </div>
+                          </div>
+                          <div className="grid md:grid-cols-2 gap-4 text-sm text-[#9ca3af]">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-[#6366f1]" />
+                              <span>{selectedCompanyData.location || "Location not added"}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-[#6366f1]" />
+                              <span>{selectedCompanyData.size || "Size not set"} • {selectedCompanyData.employees || "0"} employees</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-4 w-4 text-[#6366f1]" />
+                              {selectedCompanyData.email ? (
+                                <a href={`mailto:${selectedCompanyData.email}`} className="text-[#6366f1] hover:underline">
+                                  {selectedCompanyData.email}
+                                </a>
+                              ) : (
+                                <span>Email not added</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-[#6366f1]" />
+                              {selectedCompanyData.phone ? (
+                                <a href={`tel:${selectedCompanyData.phone}`} className="text-[#6366f1] hover:underline">
+                                  {selectedCompanyData.phone}
+                                </a>
+                              ) : (
+                                <span>Phone not added</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Globe className="h-4 w-4 text-[#6366f1]" />
+                              {selectedCompanyData.website ? (
+                                <a href={`https://${selectedCompanyData.website}`} target="_blank" rel="noopener noreferrer" className="text-[#6366f1] hover:underline flex items-center gap-1">
+                                  {selectedCompanyData.website}
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              ) : (
+                                <span>Website not added</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-[#6366f1]" />
+                              <span>Founded {selectedCompanyData.founded || "Year not set"}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="grid md:grid-cols-2 gap-4 text-sm text-[#9ca3af]">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-[#6366f1]" />
-                          <span>{selectedCompanyData.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-[#6366f1]" />
-                          <span>{selectedCompanyData.size} • {selectedCompanyData.employees} employees</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-[#6366f1]" />
-                          <a href={`mailto:${selectedCompanyData.email}`} className="text-[#6366f1] hover:underline">
-                            {selectedCompanyData.email}
-                          </a>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-[#6366f1]" />
-                          <a href={`tel:${selectedCompanyData.phone}`} className="text-[#6366f1] hover:underline">
-                            {selectedCompanyData.phone}
-                          </a>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4 text-[#6366f1]" />
-                          <a href={`https://${selectedCompanyData.website}`} target="_blank" rel="noopener noreferrer" className="text-[#6366f1] hover:underline flex items-center gap-1">
-                            {selectedCompanyData.website}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-[#6366f1]" />
-                          <span>Founded {selectedCompanyData.founded}</span>
-                        </div>
+
+                      <Card className="border border-[#2a2a3a] bg-[#1e1e2e]">
+                        <CardHeader>
+                          <CardTitle className="text-lg font-bold text-[#e8e8f0]">Description</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-[#9ca3af] leading-relaxed">
+                            {selectedCompanyData.description || "No description added yet. Click Edit to add a description."}
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <Card className="border border-[#2a2a3a] bg-[#1e1e2e]">
+                          <CardHeader>
+                            <CardTitle className="text-sm font-semibold text-[#9ca3af]">Active Jobs</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-3xl font-bold text-[#e8e8f0]">{selectedCompanyData.activeJobs}</p>
+                          </CardContent>
+                        </Card>
+                        <Card className="border border-[#2a2a3a] bg-[#1e1e2e]">
+                          <CardHeader>
+                            <CardTitle className="text-sm font-semibold text-[#9ca3af]">Total Applications</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-3xl font-bold text-[#e8e8f0]">{selectedCompanyData.totalApplications}</p>
+                          </CardContent>
+                        </Card>
+                        <Card className="border border-[#2a2a3a] bg-[#1e1e2e]">
+                          <CardHeader>
+                            <CardTitle className="text-sm font-semibold text-[#9ca3af]">Recruiters</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-3xl font-bold text-[#e8e8f0]">{selectedCompanyData.recruiterCount}</p>
+                          </CardContent>
+                        </Card>
                       </div>
-                    </div>
-                  </div>
 
-                  <Card className="border border-[#2a2a3a] bg-[#1e1e2e]">
-                    <CardHeader>
-                      <CardTitle className="text-lg font-bold text-[#e8e8f0]">Description</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-[#9ca3af] leading-relaxed">{selectedCompanyData.description}</p>
-                    </CardContent>
-                  </Card>
-
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <Card className="border border-[#2a2a3a] bg-[#1e1e2e]">
-                      <CardHeader>
-                        <CardTitle className="text-sm font-semibold text-[#9ca3af]">Active Jobs</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold text-[#e8e8f0]">{selectedCompanyData.activeJobs}</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border border-[#2a2a3a] bg-[#1e1e2e]">
-                      <CardHeader>
-                        <CardTitle className="text-sm font-semibold text-[#9ca3af]">Total Applications</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold text-[#e8e8f0]">{selectedCompanyData.totalApplications}</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border border-[#2a2a3a] bg-[#1e1e2e]">
-                      <CardHeader>
-                        <CardTitle className="text-sm font-semibold text-[#9ca3af]">Recruiters</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold text-[#e8e8f0]">{selectedCompanyData.recruiterCount}</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => {
-                        toggleFeatured(selectedCompanyData.id);
-                        setSelectedCompany(null);
-                      }}
-                      variant="outline"
-                      className="flex-1 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
-                    >
-                      {selectedCompanyData.featured ? "Remove from Featured" : "Mark as Featured"}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        toggleVerified(selectedCompanyData.id);
-                        setSelectedCompany(null);
-                      }}
-                      variant="outline"
-                      className="flex-1 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
-                    >
-                      {selectedCompanyData.verified ? "Unverify" : "Verify Company"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                  </div>
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => {
+                            toggleFeatured(selectedCompanyData.id);
+                          }}
+                          variant="outline"
+                          className="flex-1 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                        >
+                          {selectedCompanyData.featured ? "Remove from Featured" : "Mark as Featured"}
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            toggleVerified(selectedCompanyData.id);
+                          }}
+                          variant="outline"
+                          className="flex-1 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                        >
+                          {selectedCompanyData.verified ? "Unverify" : "Verify Company"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={startEditing}
+                          className="border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

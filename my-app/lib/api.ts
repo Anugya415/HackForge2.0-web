@@ -250,6 +250,12 @@ export const jobsAPI = {
   getSuggestions: async () => {
     return api.get<{ jobs: any[]; userSkills: string[] }>('/jobs/suggestions');
   },
+
+  update: async (id: number, data: any) => api.put<{ job: any; message: string }>(`/jobs/${id}`, data),
+  delete: async (id: number) => api.delete<{ message: string }>(`/jobs/${id}`),
+  save: async (id: number) => api.post<{ message: string }>(`/jobs/${id}/save`, {}),
+  unsave: async (id: number) => api.delete<{ message: string }>(`/jobs/${id}/unsave`),
+  getSaved: async () => api.get<{ jobs: any[] }>('/jobs/saved/my'),
 };
 
 export const applicationsAPI = {

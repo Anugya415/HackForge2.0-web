@@ -20,7 +20,7 @@ import {
   Users,
   TrendingUp
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { jobsAPI } from "@/lib/api";
 import Link from "next/link";
 
@@ -50,14 +50,25 @@ export function MyPostsContent() {
     }
   };
 
+  const handleDelete = async (jobId: number) => {
+    if (!confirm("Are you sure you want to delete this job?")) return;
+    try {
+      await jobsAPI.delete(jobId);
+      setJobs(jobs.filter(j => j.id !== jobId));
+      setSelectedJob(null);
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+    }
+  };
+
   const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = 
+    const matchesSearch =
       job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === "All" || job.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -208,11 +219,10 @@ export function MyPostsContent() {
                   key={status}
                   variant={statusFilter === status ? "default" : "outline"}
                   onClick={() => setStatusFilter(status)}
-                  className={`whitespace-nowrap ${
-                    statusFilter === status
-                      ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white border-0"
-                      : "border-[#2a2a3a] text-[#9ca3af] hover:bg-[#1e1e2e]"
-                  }`}
+                  className={`whitespace-nowrap ${statusFilter === status
+                    ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white border-0"
+                    : "border-[#2a2a3a] text-[#9ca3af] hover:bg-[#1e1e2e]"
+                    }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
                 </Button>
@@ -230,7 +240,7 @@ export function MyPostsContent() {
                 <Briefcase className="h-12 w-12 text-[#6366f1] mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-semibold text-[#e8e8f0] mb-2">No jobs found</p>
                 <p className="text-sm text-[#9ca3af] mb-4">
-                  {searchQuery || statusFilter !== "All" 
+                  {searchQuery || statusFilter !== "All"
                     ? "Try adjusting your search or filters"
                     : "Get started by posting your first job"}
                 </p>
@@ -290,7 +300,7 @@ export function MyPostsContent() {
                               )}
                               {job.skills_required && (
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                  {(typeof job.skills_required === 'string' 
+                                  {(typeof job.skills_required === 'string'
                                     ? job.skills_required.split(',').map(s => s.trim())
                                     : job.skills_required
                                   ).slice(0, 5).map((skill: string, idx: number) => (
@@ -325,13 +335,11 @@ export function MyPostsContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            asChild
+                            onClick={() => setSelectedJob(job)}
                             className="border-[#2a2a3a] text-[#9ca3af] hover:bg-[#1e1e2e]"
                           >
-                            <Link href={`/jobs/${job.id}`}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View
-                            </Link>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
                           </Button>
                         </div>
                       </div>
@@ -343,6 +351,116 @@ export function MyPostsContent() {
           )}
         </div>
       </section>
+
+      <AnimatePresence>
+        {selectedJob && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a0a0f]/80 backdrop-blur-sm"
+            onClick={() => setSelectedJob(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#151520] border border-[#2a2a3a] rounded-2xl shadow-2xl"
+            >
+              <Card className="border-0 bg-transparent">
+                <CardHeader className="sticky top-0 bg-[#151520] border-b border-[#2a2a3a] z-10">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl font-bold text-[#e8e8f0]">Job Details</CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSelectedJob(null)}
+                      className="text-[#9ca3af] hover:text-[#e8e8f0] hover:bg-[#1e1e2e]"
+                    >
+                      <XCircle className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#e8e8f0] mb-2">{selectedJob.title}</h2>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-[#9ca3af] mb-4">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{selectedJob.location || "Not specified"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span>{selectedJob.type || "Full-time"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#6366f1] font-semibold">₹</span>
+                        <span>{formatSalary(selectedJob.salary_min, selectedJob.salary_max)}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      {selectedJob.description && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-[#e8e8f0] mb-2">Description</h3>
+                          <p className="text-[#9ca3af] whitespace-pre-wrap">{selectedJob.description}</p>
+                        </div>
+                      )}
+
+                      {selectedJob.skills_required && (
+                        <div>
+                          <h3 className="text-sm font-semibold text-[#e8e8f0] mb-2">Required Skills</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {(typeof selectedJob.skills_required === 'string'
+                              ? selectedJob.skills_required.split(',').map((s: string) => s.trim())
+                              : selectedJob.skills_required
+                            ).map((skill: string, idx: number) => (
+                              <Badge
+                                key={idx}
+                                className="bg-[#1e1e2e] text-[#9ca3af] border border-[#2a2a3a]"
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 justify-end pt-4 border-t border-[#2a2a3a]">
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e]"
+                    >
+                      <Link href={`/jobs/${selectedJob.id}`} target="_blank">
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Public Page
+                      </Link>
+                    </Button>
+                    <Button
+                      onClick={() => alert("Edit functionality coming soon")}
+                      className="bg-[#6366f1] text-white hover:bg-[#4f46e5]"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => handleDelete(selectedJob.id)}
+                      variant="destructive"
+                      className="bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444]/20 border border-[#ef4444]/20"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

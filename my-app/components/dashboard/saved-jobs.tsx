@@ -21,7 +21,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { jobsAPI } from "@/lib/api";
+import { jobsAPI, applicationsAPI } from "@/lib/api";
 
 export function SavedJobsContent() {
   const router = useRouter();
@@ -34,31 +34,40 @@ export function SavedJobsContent() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadSavedJobs();
     if (typeof window !== "undefined") {
       const loggedIn = localStorage.getItem("isLoggedIn") === "true";
       setIsLoggedIn(loggedIn);
-      
-      const savedAppliedJobs = localStorage.getItem("appliedJobs");
-      if (savedAppliedJobs) {
-        setAppliedJobs(JSON.parse(savedAppliedJobs));
-      }
     }
+    loadSavedJobs();
   }, []);
 
   const loadSavedJobs = async () => {
     try {
       setIsLoading(true);
-      if (typeof window !== "undefined") {
-        const savedJobsData = localStorage.getItem("savedJobs");
-        if (savedJobsData) {
-          const parsed = JSON.parse(savedJobsData);
-          setSavedJobs(parsed);
-        }
+      const response = await jobsAPI.getSaved();
+      if (response.jobs) {
+        const formattedJobs = response.jobs.map((job: any) => ({
+          id: job.id,
+          jobTitle: job.title,
+          company: job.company_name,
+          location: job.location,
+          salary: job.salary_min && job.salary_max
+            ? `₹${(job.salary_min / 100000).toFixed(1)}L - ₹${(job.salary_max / 100000).toFixed(1)}L`
+            : "Not specified",
+          type: job.type,
+          postedDate: new Date(job.created_at).toLocaleDateString(),
+          savedDate: job.saved_at ? new Date(job.saved_at).toLocaleDateString() : 'Recently',
+        }));
+        setSavedJobs(formattedJobs);
+      }
+
+      // Also fetch applied status
+      const appliedResp = await applicationsAPI.getMyApplications();
+      if (appliedResp.applications) {
+        setAppliedJobs(appliedResp.applications.map((app: any) => app.job_id));
       }
     } catch (error) {
       console.error("Failed to load saved jobs:", error);
-      setSavedJobs([]);
     } finally {
       setIsLoading(false);
     }
@@ -89,8 +98,13 @@ export function SavedJobsContent() {
     setSelectedJob(null);
   };
 
-  const handleRemove = (id: number) => {
-    setSavedJobs(savedJobs.filter((job) => job.id !== id));
+  const handleRemove = async (id: number) => {
+    try {
+      await jobsAPI.unsave(id);
+      setSavedJobs(savedJobs.filter((job) => job.id !== id));
+    } catch (error) {
+      console.error("Failed to remove saved job:", error);
+    }
   };
 
   return (
