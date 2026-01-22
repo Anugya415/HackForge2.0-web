@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const genAI = process.env.GEMINI_API_KEY 
+const genAI = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
 
@@ -39,7 +39,7 @@ export class ResumeParserService {
         return this.parseWithRegex(text);
       }
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `Extract the following information from this resume text and return it as a JSON object with the exact keys shown:
 
@@ -63,7 +63,7 @@ Return only the JSON object, no other text. Make sure the JSON is valid and prop
       const content = response.text().trim();
 
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      
+
       if (jsonMatch) {
         try {
           return JSON.parse(jsonMatch[0]);
@@ -93,7 +93,7 @@ Return only the JSON object, no other text. Make sure the JSON is valid and prop
 
     const emailRegex = /[\w\.-]+@[\w\.-]+\.\w+/gi;
     const phoneRegex = /(\+?\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g;
-    
+
     const emails = text.match(emailRegex);
     if (emails && emails.length > 0) {
       result.email = emails[0];

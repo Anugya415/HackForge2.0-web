@@ -1,3 +1,5 @@
+import { clearAuthCookies } from './cookies';
+
 /**
  * Authentication utility functions for client-side route protection
  */
@@ -15,10 +17,10 @@ export interface AuthUser {
  */
 export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') return false;
-  
+
   const token = localStorage.getItem('authToken');
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  
+
   return !!(token && isLoggedIn);
 }
 
@@ -45,34 +47,18 @@ export function getAuthToken(): string | null {
   return localStorage.getItem('authToken');
 }
 
+
 /**
  * Clear authentication data
  */
 export function clearAuth(): void {
   if (typeof window === 'undefined') return;
-  
-  // Clear auth tokens and login state
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('isLoggedIn');
-  localStorage.removeItem('userRole');
-  localStorage.removeItem('isAdminLoggedIn');
-  
-  // Clear admin data
-  localStorage.removeItem('adminCompany');
-  localStorage.removeItem('adminName');
-  localStorage.removeItem('adminEmail');
-  
-  // Clear user data
-  localStorage.removeItem('userName');
-  localStorage.removeItem('userEmail');
-  
-  // Clear user preferences and saved data
-  localStorage.removeItem('savedJobs');
-  localStorage.removeItem('appliedJobs');
-  localStorage.removeItem('userApplications');
-  localStorage.removeItem('notificationSettings');
-  localStorage.removeItem('privacySettings');
-  localStorage.removeItem('userAccountData');
+
+  // Clear all session indicators
+  localStorage.clear();
+
+  // Clear cookies
+  clearAuthCookies();
 }
 
 /**
@@ -85,7 +71,7 @@ export function requiresAuth(pathname: string): boolean {
     '/admin',
     '/super-admin',
   ];
-  
+
   return protectedRoutes.some(route => pathname.startsWith(route));
 }
 
@@ -97,7 +83,7 @@ export function requiresAdmin(pathname: string): boolean {
     '/admin',
     '/super-admin',
   ];
-  
+
   return adminRoutes.some(route => pathname.startsWith(route));
 }
 

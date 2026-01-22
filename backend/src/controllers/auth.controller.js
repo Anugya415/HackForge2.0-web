@@ -148,8 +148,10 @@ export const sendOtpSignup = async (req, res) => {
 
     // Send Email
     try {
+      console.log(`[AUTH] Attempting to send OTP to ${email}`);
       // Use a default name if not provided (since this is step 1)
       const emailResult = await sendOTP(email, name || 'Future User', otp);
+      console.log(`[AUTH] Send OTP result for ${email}:`, emailResult.success ? 'SUCCESS' : 'FAILED');
 
       if (!emailResult.success) {
         throw new Error(emailResult.error || 'Failed to send email');
@@ -157,12 +159,16 @@ export const sendOtpSignup = async (req, res) => {
 
       res.json({ message: 'OTP sent successfully' });
     } catch (emailErr) {
-      console.error("Email send failed", emailErr);
-      res.status(500).json({ error: 'Failed to send OTP email. Please try again later.' });
+      console.error("[AUTH] Email send failed:", emailErr);
+      console.log(`[DEBUG] OTP for ${email} is: ${otp}. You can use this to register since email failed.`);
+      res.status(500).json({
+        error: 'Failed to send OTP email. Please check your SMTP settings.',
+        debug_otp: process.env.NODE_ENV === 'development' ? otp : undefined
+      });
     }
 
   } catch (error) {
-    console.error('Send OTP error:', error);
+    console.error('[AUTH] Send OTP error:', error);
     res.status(500).json({ error: 'Failed to process OTP request' });
   }
 };
@@ -202,6 +208,7 @@ export const verifyOtpSignup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(`[AUTH] Login attempt for email: ${email}`);
     const pool = getPool();
 
     const [users] = await pool.query(
@@ -210,35 +217,32 @@ export const login = async (req, res) => {
     );
 
     if (users.length === 0) {
+      console.log(`[AUTH] Login failed: User not found for ${email}`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = users[0];
 
     if (user.status !== 'active') {
+      console.log(`[AUTH] Login failed: Account inactive for ${email}`);
       return res.status(401).json({ error: 'Account is inactive' });
     }
 
-    // Check if email is verified (optional - you can make this required)
-    // if (!user.email_verified) {
-    //   return res.status(401).json({ error: 'Please verify your email before logging in' });
-    // }
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log(`[AUTH] Login failed: Invalid password for ${email}`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const jwtSecret = process.env.JWT_SECRET || 'hackforge-default-secret-change-in-production';
-    if (!jwtSecret || jwtSecret === 'hackforge-default-secret-change-in-production') {
-      console.warn('⚠️  WARNING: Using default JWT_SECRET. Set JWT_SECRET in .env for production!');
-    }
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       jwtSecret,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
+
+    console.log(`[AUTH] Login successful for ${email}, role: ${user.role}`);
 
     const [companies] = user.company_id ? await pool.query(
       'SELECT name FROM companies WHERE id = ?',
@@ -258,12 +262,11 @@ export const login = async (req, res) => {
       },
     });
   } catch (err) {
-    const error = err || new Error('Unknown error occurred during login');
-    console.error('Login error:', error);
-    if (error.code === 'ER_BAD_DB_ERROR') {
+    console.error('[AUTH] Login error:', err);
+    if (err.code === 'ER_BAD_DB_ERROR') {
       return res.status(500).json({ error: 'Database not initialized. Please run: npm run init-db' });
     }
-    res.status(500).json({ error: error.message || 'Failed to login' });
+    res.status(500).json({ error: err.message || 'Failed to login' });
   }
 };
 

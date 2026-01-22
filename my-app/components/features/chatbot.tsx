@@ -57,51 +57,45 @@ export function Chatbot() {
     setInputValue("");
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputValue,
+          history: messages.slice(-10), // Send last 10 messages for context
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+
+      const data = await response.json();
+
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateBotResponse(inputValue),
+        text: data.response,
         sender: "bot",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botResponse]);
+    } catch (error) {
+      console.error('Chat Error:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm sorry, I'm having trouble connecting to my brain right now. Please try again in a moment!",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
-  const generateBotResponse = (userInput: string): string => {
-    const lowerInput = userInput.toLowerCase();
-
-    if (lowerInput.includes("hello") || lowerInput.includes("hi") || lowerInput.includes("hey")) {
-      return "Hello! I'm Chilli, here to help you with GROEI. You can ask me about job searching, resume optimization, or how to use our platform.";
-    }
-
-    if (lowerInput.includes("job") || lowerInput.includes("position") || lowerInput.includes("career")) {
-      return "GROEI offers AI-powered job matching! You can browse jobs, upload your resume for analysis, and get matched with opportunities that fit your skills. Would you like to know more about any specific feature?";
-    }
-
-    if (lowerInput.includes("resume") || lowerInput.includes("cv")) {
-      return "Our resume scanner uses AI to analyze your resume and provide optimization suggestions. It checks for ATS compatibility, keyword optimization, and formatting. You can find it in the Resume Scanner section!";
-    }
-
-    if (lowerInput.includes("sign up") || lowerInput.includes("register") || lowerInput.includes("account")) {
-      return "Creating an account is easy! Just click the 'Sign Up' button in the navbar. It's free and takes less than a minute. Once registered, you'll get access to all our AI-powered features.";
-    }
-
-    if (lowerInput.includes("help") || lowerInput.includes("support")) {
-      return "I'm here to help! You can ask me about:\n• Finding jobs\n• Resume optimization\n• Creating an account\n• Using our features\n• Company information\n\nWhat would you like to know?";
-    }
-
-    if (lowerInput.includes("company") || lowerInput.includes("companies")) {
-      return "You can browse top companies on our Companies page. Each company profile shows open positions, company size, location, and ratings. Would you like me to help you find companies in a specific industry?";
-    }
-
-    if (lowerInput.includes("match") || lowerInput.includes("matching")) {
-      return "Our AI matching algorithm analyzes your skills, experience, and preferences to connect you with the best job opportunities. The more complete your profile, the better the matches!";
-    }
-
-    return "I understand you're asking about: " + userInput + ". For more specific help, you can visit our Help Center or contact our support team. Is there anything else I can assist you with?";
-  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -119,9 +113,8 @@ export function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className={`fixed bottom-24 right-6 z-50 w-96 h-[600px] ${
-              isMinimized ? "h-16" : ""
-            } flex flex-col bg-[#151520] border border-[#2a2a3a] rounded-2xl shadow-2xl shadow-[#6366f1]/20 backdrop-blur-xl`}
+            className={`fixed bottom-24 right-6 z-50 w-96 h-[600px] ${isMinimized ? "h-16" : ""
+              } flex flex-col bg-[#151520] border border-[#2a2a3a] rounded-2xl shadow-2xl shadow-[#6366f1]/20 backdrop-blur-xl`}
           >
             <div className="flex items-center justify-between p-4 border-b border-[#2a2a3a] bg-gradient-to-r from-[#6366f1]/10 to-[#8b5cf6]/10">
               <div className="flex items-center gap-3">
@@ -169,11 +162,10 @@ export function Chatbot() {
                         </div>
                       )}
                       <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                          message.sender === "user"
-                            ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white"
-                            : "bg-[#1e1e2e] text-[#e8e8f0] border border-[#2a2a3a]"
-                        }`}
+                        className={`max-w-[75%] rounded-2xl px-4 py-3 ${message.sender === "user"
+                          ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white"
+                          : "bg-[#1e1e2e] text-[#e8e8f0] border border-[#2a2a3a]"
+                          }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                         <p className="text-xs mt-1 opacity-70">
@@ -251,9 +243,8 @@ export function Chatbot() {
           setIsOpen(!isOpen);
           setIsMinimized(false);
         }}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white shadow-2xl shadow-[#6366f1]/40 flex items-center justify-center hover:from-[#4f46e5] hover:to-[#7c3aed] transition-all duration-300 ${
-          isOpen ? "hidden" : ""
-        }`}
+        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white shadow-2xl shadow-[#6366f1]/40 flex items-center justify-center hover:from-[#4f46e5] hover:to-[#7c3aed] transition-all duration-300 ${isOpen ? "hidden" : ""
+          }`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         animate={isOpen ? { scale: 0, opacity: 0 } : { scale: 1, opacity: 1 }}

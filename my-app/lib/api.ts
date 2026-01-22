@@ -1,6 +1,6 @@
 import { clearAuthCookies } from './cookies';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
 class ApiClient {
   private baseURL: string;
@@ -28,7 +28,7 @@ class ApiClient {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // Reduced to 10s
 
     try {
       const response = await fetch(url, {
@@ -88,14 +88,14 @@ class ApiClient {
       clearTimeout(timeoutId);
 
       if (error.name === 'AbortError') {
-        throw new Error('Request timeout. Please check if the backend server is running on http://localhost:8080');
+        throw new Error('Request timeout. The server is taking too long to respond. Please check your connection and the backend status.');
       }
 
       if (error.isApiError) {
         throw error;
       }
       if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
-        throw new Error('Unable to connect to server. Please make sure the backend is running on http://localhost:8080');
+        throw new Error('Unable to connect to server. Please ensure the backend is running at http://localhost:8080');
       }
       if (error.message && !error.message.includes('API request failed')) {
         throw error;
@@ -186,23 +186,8 @@ export const authAPI = {
   logout: () => {
     api.setToken(null);
     if (typeof window !== 'undefined') {
-      // Clear all localStorage items
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('isAdminLoggedIn');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('adminCompany');
-      localStorage.removeItem('adminName');
-      localStorage.removeItem('adminEmail');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('savedJobs');
-      localStorage.removeItem('appliedJobs');
-      localStorage.removeItem('userApplications');
-      localStorage.removeItem('notificationSettings');
-      localStorage.removeItem('privacySettings');
-      localStorage.removeItem('userAccountData');
-
+      // Clear all indicators
+      localStorage.clear();
       // Clear cookies
       clearAuthCookies();
     }

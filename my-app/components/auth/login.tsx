@@ -24,7 +24,12 @@ export function LoginContent() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
-      const redirect = urlParams.get("redirect");
+      let redirect = urlParams.get("redirect");
+
+      // Prevent redirecting back to login or signup
+      if (redirect && (redirect.startsWith("/login") || redirect.startsWith("/signup"))) {
+        redirect = null;
+      }
 
       // Check if user appears to be logged in
       const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -32,9 +37,10 @@ export function LoginContent() {
       if (isLoggedIn) {
         // validate real authentication status
         if (isAuthenticated()) {
-          // Only redirect if valid
-          if (redirect) {
-            router.push(redirect);
+          // Only redirect if valid and not already on the destination
+          const target = redirect || "/dashboard";
+          if (window.location.pathname !== target) {
+            router.push(target);
           }
         } else {
           // If local storage says logged in but auth is invalid, clear it to prevent loops

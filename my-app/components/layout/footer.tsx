@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
-import { Github, Twitter, Linkedin, Mail } from "lucide-react";
+import { Github, Twitter, Linkedin, Mail, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 const footerLinks = {
@@ -37,103 +37,101 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-[#0a0a0f] border-t border-[#2a2a3a]">
-      <div className="w-[80%] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
+    <footer className="relative bg-transparent border-t border-[#041f2b]/10 pt-24 pb-12">
+      <div className="w-[85%] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-8 sm:gap-12 mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="col-span-2 md:col-span-2 space-y-6"
-          >
-            <Link href="/" className="inline-block group">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#ec4899] flex items-center justify-center shadow-lg shadow-[#6366f1]/30">
-                  <span className="text-white font-bold text-lg">G</span>
-                </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-[#e8e8f0] to-[#a5b4fc] bg-clip-text text-transparent tracking-tight">
-                  GROEI
-                </span>
-              </div>
-            </Link>
-            <p className="text-sm text-[#9ca3af] max-w-md leading-relaxed">
-              AI-powered freelance marketplace & job portal connecting talented professionals with top companies worldwide.
-            </p>
-            <div className="flex items-center gap-3">
-              {socialLinks.map((social, index) => {
-                const Icon = social.icon;
-                return (
-                  <motion.div
-                    key={social.label}
-                    initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1, duration: 0.4 }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Link
-                      href={social.href}
-                      className="w-11 h-11 rounded-xl bg-[#151520] hover:bg-[#1e1e2e] border border-[#2a2a3a] hover:border-[#6366f1]/50 flex items-center justify-center transition-all duration-300 group"
-                      aria-label={social.label}
-                    >
-                      <Icon className="h-5 w-5 text-[#9ca3af] group-hover:text-[#6366f1] transition-colors" />
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          {Object.entries(footerLinks).map(([category, links], categoryIndex) => (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-12 sm:gap-16 mb-20">
             <motion.div
-              key={category}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: categoryIndex * 0.1, duration: 0.6 }}
-              className="space-y-4"
+              transition={{ duration: 0.6 }}
+              className="col-span-2 md:col-span-2 space-y-8"
             >
-              <h3 className="font-semibold text-[#e8e8f0] capitalize">{category}</h3>
-              <ul className="space-y-3">
-                {links.map((link) => (
-                  <li key={link.name}>
-                    <Link 
-                      href={link.href} 
-                      className="text-sm text-[#9ca3af] hover:text-[#6366f1] transition-colors inline-block hover:translate-x-1 transform duration-200"
+              <Link href="/" className="inline-block group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#041f2b] flex items-center justify-center shadow-xl shadow-[#041f2b]/20 text-white">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <span className="text-3xl font-black text-[#041f2b] tracking-tight">
+                    GROEI
+                  </span>
+                </div>
+              </Link>
+              <p className="text-lg text-[#041f2b]/50 max-w-sm leading-relaxed font-medium">
+                The AI-powered platform connecting elite talent with exceptional opportunities worldwide.
+              </p>
+              <div className="flex items-center gap-4">
+                {socialLinks.map((social, index) => {
+                  const Icon = social.icon;
+                  return (
+                    <motion.div
+                      key={social.label}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1, duration: 0.4 }}
+                      whileHover={{ y: -5 }}
                     >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                      <Link
+                        href={social.href}
+                        className="w-12 h-12 rounded-2xl bg-white border border-[#041f2b]/10 flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md hover:border-[#041f2b]/20 text-[#041f2b]/40 hover:text-[#041f2b]"
+                        aria-label={social.label}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </motion.div>
-          ))}
-        </div>
 
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col md:flex-row justify-between items-center text-sm text-[#9ca3af] gap-4 pt-8 border-t border-[#2a2a3a]"
-        >
-          <p>© {currentYear} GROEI. All rights reserved.</p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-[#6366f1] transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-[#6366f1] transition-colors">
-              Terms
-            </Link>
-            <Link href="/cookies" className="hover:text-[#6366f1] transition-colors">
-              Cookies
-            </Link>
+            {Object.entries(footerLinks).map(([category, links], categoryIndex) => (
+              <motion.div
+                key={category}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: categoryIndex * 0.1, duration: 0.6 }}
+                className="space-y-6"
+              >
+                <h3 className="text-xs font-black text-[#041f2b] uppercase tracking-[0.2em]">{category}</h3>
+                <ul className="space-y-4">
+                  {links.map((link) => (
+                    <li key={link.name}>
+                      <Link
+                        href={link.href}
+                        className="text-base text-[#041f2b]/50 hover:text-[#041f2b] transition-all inline-block hover:translate-x-1 font-medium"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
           </div>
-        </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col md:flex-row justify-between items-center text-sm font-bold text-[#041f2b]/30 gap-6 pt-10 border-t border-[#041f2b]/05"
+          >
+            <p>© {currentYear} GROEI. Built with Precision.</p>
+            <div className="flex gap-8">
+              <Link href="/privacy" className="hover:text-[#041f2b] transition-colors">
+                Privacy
+              </Link>
+              <Link href="/terms" className="hover:text-[#041f2b] transition-colors">
+                Terms
+              </Link>
+              <Link href="/cookies" className="hover:text-[#041f2b] transition-colors">
+                Cookies
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </div>
     </footer>

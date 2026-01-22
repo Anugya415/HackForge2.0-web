@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Briefcase, 
-  FileText, 
-  TrendingUp, 
+import {
+  Briefcase,
+  FileText,
+  TrendingUp,
   CheckCircle2,
   Clock,
   Star,
@@ -193,34 +193,52 @@ export function DashboardContent() {
   }, []);
 
   const loadUserData = async () => {
+    // Add a safety timeout for data loading
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Data loading timed out")), 8000)
+    );
+
     try {
       setIsLoading(true);
-      const profileResponse = await authAPI.getProfile();
-      if (profileResponse.user) {
-        const userData = profileResponse.user;
-        setUser({
-          name: userData.name || "User",
-          email: userData.email || "",
-          phone: userData.phone || "",
-          location: userData.location || "",
-          title: userData.title || "",
-          avatar: userData.name ? userData.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : "U",
-          experience: userData.experience || "",
-          education: userData.education || "",
-          skills: userData.skills ? (typeof userData.skills === 'string' ? userData.skills.split(',') : userData.skills) : [],
-          bio: userData.bio || "",
-          resumeUploaded: !!userData.resume_url,
-          profileComplete: calculateProfileComplete(userData),
-          joinedDate: userData.created_at ? new Date(userData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "",
-        });
-      }
 
-      const applicationsResponse = await applicationsAPI.getMyApplications();
-      if (applicationsResponse.applications) {
-        setUserApplications(applicationsResponse.applications);
-      }
+      // Wrap the loading in a promise to handle timeout
+      await Promise.race([
+        (async () => {
+          const profileResponse = await authAPI.getProfile();
+          if (profileResponse.user) {
+            const userData = profileResponse.user;
+            setUser({
+              name: userData.name || "User",
+              email: userData.email || "",
+              phone: userData.phone || "",
+              location: userData.location || "",
+              title: userData.title || "",
+              avatar: userData.name ? userData.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : "U",
+              experience: userData.experience || "",
+              education: userData.education || "",
+              skills: userData.skills ? (typeof userData.skills === 'string' ? userData.skills.split(',') : userData.skills) : [],
+              bio: userData.bio || "",
+              resumeUploaded: !!userData.resume_url,
+              profileComplete: calculateProfileComplete(userData),
+              joinedDate: userData.created_at ? new Date(userData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "",
+            });
+          }
+
+          try {
+            const applicationsResponse = await applicationsAPI.getMyApplications();
+            if (applicationsResponse.applications) {
+              setUserApplications(applicationsResponse.applications);
+            }
+          } catch (appError) {
+            console.error("Failed to load applications:", appError);
+            // Don't fail the whole dashboard if just applications fail
+          }
+        })(),
+        timeoutPromise
+      ]);
     } catch (error) {
-      console.error("Failed to load user data:", error);
+      console.error("Dashboard data load error:", error);
+      // Fallback to local storage data if available
       if (typeof window !== "undefined") {
         const name = localStorage.getItem("adminName") || localStorage.getItem("userName") || "User";
         const email = localStorage.getItem("adminEmail") || localStorage.getItem("userEmail") || "";
@@ -252,7 +270,7 @@ export function DashboardContent() {
   const handleSave = (jobId: number, job: any) => {
     if (typeof window !== "undefined") {
       const savedJobs = JSON.parse(localStorage.getItem("savedJobs") || "[]");
-      
+
       if (savedJobIds.includes(jobId)) {
         const updatedSavedJobs = savedJobIds.filter(id => id !== jobId);
         setSavedJobIds(updatedSavedJobs);
@@ -378,21 +396,21 @@ export function DashboardContent() {
                     variant="outline"
                     className="border-2 border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
                   >
-                      <Link href="/jobs">
-                        <Search className="h-4 w-4 mr-2" />
-                        Find Jobs
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      size="lg"
-                      className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30"
-                    >
-                      <Link href="/resume-scanner">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Resume
-                      </Link>
-                    </Button>
+                    <Link href="/jobs">
+                      <Search className="h-4 w-4 mr-2" />
+                      Find Jobs
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="lg"
+                    className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white hover:from-[#4f46e5] hover:to-[#7c3aed] border-0 shadow-lg shadow-[#6366f1]/30"
+                  >
+                    <Link href="/resume-scanner">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Resume
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -454,41 +472,37 @@ export function DashboardContent() {
               <div className="flex gap-2 border border-[#2a2a3a] rounded-lg p-1 bg-[#151520]/50">
                 <button
                   onClick={() => setActiveTab("applications")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    activeTab === "applications"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "applications"
                       ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white"
                       : "text-[#9ca3af] hover:text-[#e8e8f0]"
-                  }`}
+                    }`}
                 >
                   Applications
                 </button>
                 <button
                   onClick={() => setActiveTab("saved")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    activeTab === "saved"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "saved"
                       ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white"
                       : "text-[#9ca3af] hover:text-[#e8e8f0]"
-                  }`}
+                    }`}
                 >
                   Saved Jobs
                 </button>
                 <button
                   onClick={() => setActiveTab("recommendations")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    activeTab === "recommendations"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "recommendations"
                       ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white"
                       : "text-[#9ca3af] hover:text-[#e8e8f0]"
-                  }`}
+                    }`}
                 >
                   Recommendations
                 </button>
                 <button
                   onClick={() => setActiveTab("find-jobs")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    activeTab === "find-jobs"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "find-jobs"
                       ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white"
                       : "text-[#9ca3af] hover:text-[#e8e8f0]"
-                  }`}
+                    }`}
                 >
                   Find Jobs
                 </button>
@@ -513,7 +527,7 @@ export function DashboardContent() {
                           className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"
                           whileHover={{ scaleX: 1 }}
                         />
-                        
+
                         <CardHeader>
                           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div className="flex-1">
@@ -544,7 +558,7 @@ export function DashboardContent() {
                                   </div>
                                 )}
                               </div>
-                              
+
                               <div className="flex flex-wrap items-center gap-3">
                                 <Badge className="bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white border-0 shadow-lg shadow-[#6366f1]/30">
                                   {application.status}
@@ -658,11 +672,10 @@ export function DashboardContent() {
                               onClick={() => handleSave(job.id, job)}
                               variant="outline"
                               size="sm"
-                              className={`border-2 ${
-                                savedJobIds.includes(job.id)
+                              className={`border-2 ${savedJobIds.includes(job.id)
                                   ? "border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]"
                                   : "border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
-                              }`}
+                                }`}
                             >
                               <Bookmark className={`h-4 w-4 ${savedJobIds.includes(job.id) ? "fill-[#6366f1]" : ""}`} />
                             </Button>
@@ -713,11 +726,10 @@ export function DashboardContent() {
                               onClick={() => handleSave(job.id, job)}
                               variant="outline"
                               size="sm"
-                              className={`border-2 ${
-                                savedJobIds.includes(job.id)
+                              className={`border-2 ${savedJobIds.includes(job.id)
                                   ? "border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]"
                                   : "border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
-                              }`}
+                                }`}
                             >
                               <Bookmark className={`h-4 w-4 ${savedJobIds.includes(job.id) ? "fill-[#6366f1]" : ""}`} />
                             </Button>
@@ -801,11 +813,10 @@ export function DashboardContent() {
                             <Button
                               onClick={() => handleSave(job.id, job)}
                               variant="outline"
-                              className={`border-2 ${
-                                savedJobIds.includes(job.id)
+                              className={`border-2 ${savedJobIds.includes(job.id)
                                   ? "border-[#6366f1] bg-[#6366f1]/10 text-[#6366f1]"
                                   : "border-[#2a2a3a] text-[#e8e8f0] hover:bg-[#1e1e2e] hover:border-[#6366f1]/50"
-                              }`}
+                                }`}
                             >
                               <Bookmark className={`h-4 w-4 mr-2 ${savedJobIds.includes(job.id) ? "fill-[#6366f1]" : ""}`} />
                               {savedJobIds.includes(job.id) ? "Saved" : "Save"}
@@ -813,7 +824,7 @@ export function DashboardContent() {
                           </div>
                         </div>
                       </CardHeader>
-              </Card>
+                    </Card>
                   </motion.div>
                 ))}
                 <div className="pt-4">
@@ -950,7 +961,7 @@ export function DashboardContent() {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-1.5 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-[#9ca3af]">Resume</span>

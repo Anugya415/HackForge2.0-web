@@ -102,137 +102,137 @@ export function Testimonials() {
       <div className="w-[80%] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto">
           <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-16 space-y-4 relative z-10"
-      >
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#151520]/50 backdrop-blur-sm border border-[#6366f1]/20 mb-4">
-          <Quote className="h-4 w-4 text-[#6366f1]" />
-          <span className="text-xs font-medium text-[#a5b4fc] uppercase tracking-wide">
-            Testimonials
-          </span>
-        </div>
-        <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight px-4">
-          <span className="bg-gradient-to-r from-[#e8e8f0] to-[#a5b4fc] bg-clip-text text-transparent">
-            What Our Users
-          </span>
-          <br />
-          <span className="text-[#9ca3af]">Say About Us</span>
-        </h2>
-        <p className="text-lg md:text-xl text-[#9ca3af] max-w-3xl mx-auto px-4">
-          Join thousands of professionals who found their perfect match with GROEI
-        </p>
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16 space-y-4 relative z-10"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#151520]/50 backdrop-blur-sm border border-[#6366f1]/20 mb-4">
+              <Quote className="h-4 w-4 text-[#6366f1]" />
+              <span className="text-xs font-medium text-[#a5b4fc] uppercase tracking-wide">
+                Testimonials
+              </span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight px-4">
+              <span className="bg-gradient-to-r from-[#e8e8f0] to-[#a5b4fc] bg-clip-text text-transparent">
+                What Our Users
+              </span>
+              <br />
+              <span className="text-[#9ca3af]">Say About Us</span>
+            </h2>
+            <p className="text-lg md:text-xl text-[#9ca3af] max-w-3xl mx-auto px-4">
+              Join thousands of professionals who found their perfect match with GROEI
+            </p>
           </motion.div>
 
-          <div 
+          <div
             className="overflow-hidden relative py-8"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div
-          className="flex testimonials-scroll"
-          style={{
-            willChange: "transform",
-            gap: "3rem",
-            animationPlayState: isHovered ? "paused" : "running",
-          }}
-        >
-          {duplicatedTestimonials.map((testimonial, index) => (
-            <motion.div
-              key={`${testimonial.name}-${index}`}
-              className="flex-shrink-0 w-[85vw] sm:w-[400px] md:w-[450px] lg:w-[420px]"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.5, delay: (index % testimonials.length) * 0.1 }}
-              whileHover={{ scale: 1.02, y: -4 }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <div
+              className="flex testimonials-scroll"
+              style={{
+                willChange: "transform",
+                gap: "3rem",
+                animationPlayState: isHovered ? "paused" : "running",
+              }}
             >
-              <Card className="group relative overflow-hidden border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-md hover:bg-[#151520] hover:border-[#6366f1]/30 hover:shadow-2xl hover:shadow-[#6366f1]/15 transition-all duration-700 h-full">
+              {duplicatedTestimonials.map((testimonial, index) => (
                 <motion.div
-                  className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-10 rounded-full -mr-24 -mt-24 blur-3xl transition-opacity duration-700`}
-                  animate={{
-                    scale: [1, 1.4, 1],
-                    rotate: [0, 180, 360],
-                  }}
-                  transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: (index % testimonials.length) * 0.4,
-                  }}
-                />
-                
-                <CardContent className="p-10 relative">
-                  <motion.div 
-                    className="flex items-center gap-1.5 mb-6"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0 }}
-                    transition={{ delay: (index % testimonials.length) * 0.1 + 0.2 }}
-                  >
-                    {[...Array(testimonial.rating)].map((_, i) => (
+                  key={`${testimonial.name}-${index}`}
+                  className="flex-shrink-0 w-[85vw] sm:w-[400px] md:w-[450px] lg:w-[420px]"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.5, delay: (index % testimonials.length) * 0.1 }}
+                  whileHover={{ scale: 1.02, y: -4 }}
+                >
+                  <Card className="group relative overflow-hidden border border-[#2a2a3a] bg-[#151520]/50 backdrop-blur-md hover:bg-[#151520] hover:border-[#6366f1]/30 hover:shadow-2xl hover:shadow-[#6366f1]/15 transition-all duration-700 h-full">
+                    <motion.div
+                      className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-10 rounded-full -mr-24 -mt-24 blur-3xl transition-opacity duration-700`}
+                      animate={{
+                        scale: [1, 1.4, 1],
+                        rotate: [0, 180, 360],
+                      }}
+                      transition={{
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: (index % testimonials.length) * 0.4,
+                      }}
+                    />
+
+                    <CardContent className="p-10 relative">
                       <motion.div
-                        key={i}
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={isInView ? { scale: 1, rotate: 0 } : { scale: 0 }}
-                        transition={{ delay: (index % testimonials.length) * 0.1 + 0.3 + i * 0.05, type: "spring", stiffness: 200 }}
+                        className="flex items-center gap-1.5 mb-6"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0 }}
+                        transition={{ delay: (index % testimonials.length) * 0.1 + 0.2 }}
                       >
-                        <Star className="h-5 w-5 fill-[#6366f1] text-[#6366f1]" />
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={isInView ? { scale: 1, rotate: 0 } : { scale: 0 }}
+                            transition={{ delay: (index % testimonials.length) * 0.1 + 0.3 + i * 0.05, type: "spring", stiffness: 200 }}
+                          >
+                            <Star className="h-5 w-5 fill-[#6366f1] text-[#6366f1]" />
+                          </motion.div>
+                        ))}
                       </motion.div>
-                    ))}
-                  </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0 }}
-                    transition={{ delay: (index % testimonials.length) * 0.1 + 0.4 }}
-                  >
-                    <Quote className="h-12 w-12 text-[#6366f1]/30 mb-6" />
-                  </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0 }}
+                        transition={{ delay: (index % testimonials.length) * 0.1 + 0.4 }}
+                      >
+                        <Quote className="h-12 w-12 text-[#6366f1]/30 mb-6" />
+                      </motion.div>
 
-                  <motion.p 
-                    className="text-[#9ca3af] mb-8 leading-relaxed text-base"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
-                    transition={{ delay: (index % testimonials.length) * 0.1 + 0.5 }}
-                  >
-                    "{testimonial.content}"
-                  </motion.p>
+                      <motion.p
+                        className="text-[#9ca3af] mb-8 leading-relaxed text-base"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
+                        transition={{ delay: (index % testimonials.length) * 0.1 + 0.5 }}
+                      >
+                        "{testimonial.content}"
+                      </motion.p>
 
-                  <motion.div 
-                    className="flex items-center gap-5 pt-6"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
-                    transition={{ delay: (index % testimonials.length) * 0.1 + 0.6 }}
-                  >
-                    <motion.div 
-                      className={`w-16 h-16 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white font-semibold text-lg shadow-xl shadow-[#6366f1]/30`}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      {testimonial.avatar}
-                    </motion.div>
-                    <div>
-                      <div className="font-semibold text-[#e8e8f0] text-base">
-                        {testimonial.name}
-                      </div>
-                      <div className="text-sm text-[#9ca3af] mt-0.5">
-                        {testimonial.role} at {testimonial.company}
-                      </div>
-                    </div>
-                  </motion.div>
-                </CardContent>
+                      <motion.div
+                        className="flex items-center gap-5 pt-6"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0 }}
+                        transition={{ delay: (index % testimonials.length) * 0.1 + 0.6 }}
+                      >
+                        <motion.div
+                          className={`w-16 h-16 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white font-semibold text-lg shadow-xl shadow-[#6366f1]/30`}
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                        >
+                          {testimonial.avatar}
+                        </motion.div>
+                        <div>
+                          <div className="font-semibold text-[#e8e8f0] text-base">
+                            {testimonial.name}
+                          </div>
+                          <div className="text-sm text-[#9ca3af] mt-0.5">
+                            {testimonial.role} at {testimonial.company}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </CardContent>
 
-                <motion.div 
-                  className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${testimonial.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}
-                  initial={{ scaleX: 0 }}
-                  whileHover={{ scaleX: 1 }}
-                  style={{ originX: 0 }}
-                />
-              </Card>
-            </motion.div>
-          ))}
+                    <motion.div
+                      className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${testimonial.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      style={{ originX: 0 }}
+                    />
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </section>

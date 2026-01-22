@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import resumeRoutes from './routes/resume.routes.js';
 import resumeAnalysisRoutes from './routes/resumeAnalysis.routes.js';
+import chatRoutes from './routes/chat.routes.js';
 import path from 'path';
 
 dotenv.config();
@@ -29,8 +30,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     message: 'HackForge API is running',
     timestamp: new Date().toISOString()
   });
@@ -45,6 +46,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/resume-analysis', resumeAnalysisRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
@@ -54,11 +56,11 @@ app.use((err, req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     console.error('Error:', err.message || err);
   }
-  
+
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'Invalid JSON in request body' });
   }
-  
+
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
@@ -72,24 +74,24 @@ const startServer = async () => {
       const { verifyEmailConfig } = await import('./services/email.service.js');
       await verifyEmailConfig();
     }
-    
+
     console.log('Checking database connection...');
     const isConnected = await testConnection();
     if (!isConnected) {
       console.error('Failed to connect to database. Please check your MySQL configuration.');
       process.exit(1);
     }
-    
+
     console.log('Creating database if not exists...');
     const dbCreated = await createDatabaseIfNotExists();
     if (!dbCreated) {
       console.error('Failed to create database. Please check your MySQL configuration.');
       process.exit(1);
     }
-    
+
     console.log('Creating database pool...');
     createPool();
-    
+
     console.log('Testing database pool connection...');
     const dbConnected = await testDatabaseConnection();
     if (!dbConnected) {
@@ -107,14 +109,14 @@ const startServer = async () => {
         console.log('✅ Database and tables ready!');
       }
     }
-    
+
     const server = app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Database: ${process.env.DB_NAME || 'hackforge_db'}`);
       console.log(`API URL: http://localhost:${PORT}`);
     });
-    
+
     server.on('error', (error) => {
       if (error.code === 'EADDRINUSE') {
         console.error(`Port ${PORT} is already in use. Please:`);

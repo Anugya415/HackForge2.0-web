@@ -17,28 +17,36 @@ export function ProtectedRoute({ children, requireAdmin: needAdmin = false }: Pr
 
   useEffect(() => {
     const checkAuth = () => {
-      // If route requires authentication
-      if (requiresAuth(pathname)) {
-        if (!isAuthenticated()) {
-          // Redirect to login with return URL
-          const loginUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
-          router.push(loginUrl);
-          return;
-        }
-
-        // Check if admin role is required
-        if (needAdmin || requiresAdmin(pathname)) {
-          const role = getUserRole();
-          if (role !== 'admin') {
-            // Redirect to dashboard if not admin
-            router.push('/dashboard');
+      try {
+        // If route requires authentication
+        if (requiresAuth(pathname)) {
+          if (!isAuthenticated()) {
+            // Prevent redirect loop - don't redirect if we're already on /login
+            if (pathname !== '/login') {
+              const loginUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
+              console.log(`[AUTH] Unauthorized access to ${pathname}, redirecting to login`);
+              router.push(loginUrl);
+            }
             return;
           }
-        }
-      }
 
-      setIsAuthorized(true);
-      setIsLoading(false);
+          // Check if admin role is required
+          if (needAdmin || requiresAdmin(pathname)) {
+            const role = getUserRole();
+            if (role !== 'admin') {
+              console.log(`[AUTH] Non-admin access to ${pathname}, redirecting to dashboard`);
+              router.push('/dashboard');
+              return;
+            }
+          }
+        }
+
+        setIsAuthorized(true);
+      } catch (err) {
+        console.error("[AUTH] Error in ProtectedRoute:", err);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     checkAuth();
