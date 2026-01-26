@@ -106,14 +106,35 @@ export function ResumeScannerContent() {
 
     try {
       const { resumeAPI } = await import("@/lib/api");
-      const response = await resumeAPI.analyzeResume(file);
+      let response;
+      const token = localStorage.getItem('authToken');
+
+      if (token) {
+        // Authenticated: Upload and Analyze
+        response = await resumeAPI.uploadResume(file);
+        // response has { resume, analysis, suggestedJobs, ... }
+        // We Map 'analysis' to 'analysisData' state
+        // And handle suggestedJobs
+        if (response.suggestedJobs) {
+          // We need to store suggested jobs somewhere. 
+          // Currently component doesn't have state for that. 
+          // But we can add it or just stick it into analysisData for display hacks?
+          // Cleanest way: add suggestedJobs to analysisData object displayed.
+          response.analysis.suggestedJobs = response.suggestedJobs;
+        }
+        setAnalysisData(response.analysis || response.parsedData);
+        // Note: if backend returns analysis object in response.analysis, use it.
+      } else {
+        // Guest: Just Analyze
+        response = await resumeAPI.analyzeResume(file);
+        setAnalysisData(response.analysis);
+      }
 
       clearInterval(progressInterval);
       setAnalysisProgress(100);
       setCurrentStep(steps[steps.length - 1].message);
 
       setTimeout(() => {
-        setAnalysisData(response.analysis);
         setAnalyzing(false);
         setAnalysisComplete(true);
       }, 500);
@@ -380,6 +401,41 @@ export function ResumeScannerContent() {
                             </li>
                           ))}
                         </ul>
+                      </div>
+                    )}
+
+                    {analysisData.suggestedJobs && analysisData.suggestedJobs.length > 0 && (
+                      <div className="pt-6 border-t border-[#041f2b]/10">
+                        <h3 className="text-xl font-bold text-[#041f2b] mb-4 flex items-center gap-2">
+                          <Target className="h-5 w-5 text-[#6366f1]" />
+                          Job Matches
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4">
+                          {analysisData.suggestedJobs.map((job: any) => (
+                            <Card key={job.id} className="border border-[#041f2b]/10 bg-white hover:border-[#6366f1]/30 transition-all cursor-pointer">
+                              <CardContent className="p-4 flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-lg bg-[#f3f4f6] flex items-center justify-center text-xl font-bold text-[#6366f1] overflow-hidden">
+                                  {job.company_logo ? (
+                                    <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    job.company_name?.charAt(0) || "C"
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-[#041f2b]">{job.title}</h4>
+                                  <p className="text-sm text-[#041f2b]/60 mb-2">{job.company_name} • {job.location}</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {job.type && <Badge variant="outline" className="text-xs">{job.type}</Badge>}
+                                    {job.salary_min && <Badge variant="outline" className="text-xs text-[#10b981] border-[#10b981]/20 bg-[#10b981]/05">
+                                      ${job.salary_min.toLocaleString()} - ${job.salary_max?.toLocaleString()}
+                                    </Badge>}
+                                  </div>
+                                </div>
+                                <Button variant="ghost" size="sm" className="text-[#6366f1]">View</Button>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
                       </div>
                     )}
 

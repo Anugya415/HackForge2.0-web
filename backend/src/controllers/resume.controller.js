@@ -1,4 +1,5 @@
 import { getPool } from '../config/database.js';
+import { ResumeAnalysisService } from '../services/resumeAnalysis.service.js';
 import { ResumeParserService } from '../services/resumeParser.service.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -14,12 +15,15 @@ export const uploadResume = async (req, res) => {
     const filePath = file.path;
     const fileUrl = `/uploads/resumes/${path.basename(filePath)}`;
 
+    let analysis = null;
     let parsedData = null;
     let extractedData = {};
 
     try {
-      const parseResult = await ResumeParserService.parseResume(filePath, file.mimetype);
-      parsedData = parseResult.parsedData;
+      // Use Analysis Service to get scores AND parsed data
+      analysis = await ResumeAnalysisService.analyzeResume(filePath, file.mimetype);
+      parsedData = analysis.scrapedData;
+
       extractedData = {
         name: parsedData.name,
         email: parsedData.email,
@@ -29,7 +33,14 @@ export const uploadResume = async (req, res) => {
         education: parsedData.education,
       };
     } catch (parseError) {
-      console.error('Resume parsing error:', parseError);
+      console.error('Resume analysis error:', parseError);
+      // Fallback to basic parsing if analysis fails
+      try {
+        const parseResult = await ResumeParserService.parseResume(filePath, file.mimetype);
+        parsedData = parseResult.parsedData;
+      } catch (e) {
+        console.error('Fallback parsing failed:', e);
+      }
     }
 
     const pool = getPool();
@@ -47,7 +58,7 @@ export const uploadResume = async (req, res) => {
         file.originalname,
         fileUrl,
         file.size,
-        parsedData ? JSON.stringify(parsedData) : null,
+        analysis ? JSON.stringify(analysis) : (parsedData ? JSON.stringify(parsedData) : null), // Save full analysis if available
         extractedData.name,
         extractedData.email,
         extractedData.phone,
@@ -103,7 +114,7 @@ export const uploadResume = async (req, res) => {
     let suggestedJobs = [];
     try {
       if (parsedData && (parsedData.skills || extractedData.skills)) {
-        const userSkills = parsedData.skills 
+        const userSkills = parsedData.skills
           ? (Array.isArray(parsedData.skills) ? parsedData.skills.map(s => String(s).trim()) : [String(parsedData.skills).trim()])
           : (extractedData.skills ? extractedData.skills.split(',').map(s => s.trim()).filter(s => s.length > 0) : []);
 
@@ -134,6 +145,7 @@ export const uploadResume = async (req, res) => {
 
     res.status(201).json({
       resume: resumes[0],
+      analysis: analysis,
       parsedData: parsedData,
       suggestedJobs: suggestedJobs,
       message: 'Resume uploaded and parsed successfully',
